@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <script>
+      function display(response)
+      {
+        var html;
+
+        html='';
+        html+='ID   '+response.id+'<br>';
+        html+='Name '+response.name+'<br>';
+        html+='E-mail '+response.email+'<br>';
+        html+='Username '+response.username+'<br>';
+        html+='Home ID '+response.homes[0].id+'<br>';
+        html+='Home name '+response.homes[0].name+'<br>';
+        html+='Device ID '+response.mobileDevices[0].id+'<br>';
+        html+='Device name '+response.mobileDevices[0].name+'<br>';
+        html+='Distance '+response.mobileDevices[0].location.relativeDistanceFromHomeFence+'<br>';
+        html+='Bearing '+response.mobileDevices[0].location.bearing.degrees+'<br>';
+        document.getElementById("info").innerHTML=html;
+      }
+      
+      function loadInfo() 
+      {
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() 
+          {
+              if (this.readyState == 4 && this.status == 200) 
+              {
+//                alert(this.responseText);  
+                display(JSON.parse(this.responseText));
+              }
+          };
+          xhttp.open("GET", "/api/me", true);
+          xhttp.setRequestHeader("Content-type", "application/json");
+          xhttp.send("");
+      }
+    </script>  
+  </head>
+  <body onload="javascript:loadInfo();">
+    <H1>User info</H1>
+    <div id="info"></div>
+  </body>
+</html>
