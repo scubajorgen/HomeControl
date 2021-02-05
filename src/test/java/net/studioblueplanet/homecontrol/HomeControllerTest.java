@@ -5,37 +5,53 @@
  */
 package net.studioblueplanet.homecontrol;
 
+import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
+import net.studioblueplanet.homecontrol.tado.TadoInterface;
+import org.junit.runner.RunWith;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.AfterClass;
+//import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-//import static org.junit.Assert.*;
-
-import static org.hamcrest.Matchers.equalTo;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import org.junit.jupiter.api.Test;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.test.web.servlet.MvcResult;
+
+import org.mockito.Mockito;
+
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 /**
  *
- * @author jorgen.van.der.velde
+ * @author jorgen
  */
-@SpringBootTest
-@AutoConfigureMockMvc
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = Application.class)
+@WebAppConfiguration
 public class HomeControllerTest
 {
+    protected MockMvc mvc;
+ 
     @Autowired
-    private MockMvc mvc;
-        
+    WebApplicationContext webApplicationContext;
+  
+    @MockBean
+    private TadoInterface tadoInterface;
+    
     public HomeControllerTest()
     {
     }
-/*    
+    
     @BeforeClass
     public static void setUpClass()
     {
@@ -49,22 +65,38 @@ public class HomeControllerTest
     @Before
     public void setUp()
     {
+        mvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
     }
     
     @After
     public void tearDown()
     {
     }
-*/
 
-/*
+    /**
+     * Test of me method, of class HomeController.
+     */
     @Test
-    public void testGetHello() throws Exception
+    public void testMe() throws Exception   
     {
-        mvc.perform(MockMvcRequestBuilders.get("/").accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().string(equalTo("Greetings from Spring Boot!")));
-    }  
+        System.out.println("me");
 
-*/
+        TadoMe me=new TadoMe();
+        me.setName("test name");
+
+        // Good scenario
+        Mockito.when(this.tadoInterface.tadoMe()).thenReturn(me);
+        String uri = "/api/me";
+        MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.get(uri).accept(MediaType.APPLICATION_JSON_VALUE)).andReturn();
+        int status = mvcResult.getResponse().getStatus();
+        assertEquals(200, status);
+        assertEquals("test name", me.getName());
+
+        // Bad flow: no connection with Tado
+        Mockito.when(this.tadoInterface.tadoMe()).thenReturn(null);
+        mvcResult = mvc.perform(MockMvcRequestBuilders.get(uri).accept(MediaType.APPLICATION_JSON_VALUE)).andReturn();
+        status = mvcResult.getResponse().getStatus();
+        assertEquals(404, status);
+    }
+    
 }

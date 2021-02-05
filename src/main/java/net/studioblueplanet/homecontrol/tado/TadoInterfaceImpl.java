@@ -43,7 +43,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     private static final int    REFRESHSECONDSBEFOREEXPIRATION=20;
     private static final int    MINSECONDSBEFOREREFRESH       =2;
     private static final int    MAXSECONDSBEFOREREFRESH       =120;
-    private static final Logger log = LoggerFactory.getLogger(TadoInterfaceImpl.class);    
+    private static final Logger LOG = LoggerFactory.getLogger(TadoInterfaceImpl.class);    
 
     // Guarded data
     private TadoToken           token;
@@ -98,7 +98,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
             try
             {
                 localToken = template.postForObject("https://auth.tado.com/oauth/token", formEntity, TadoToken.class);        
-                log.info("Token refreshed: expires in {} seconds", localToken.getExpires_in());
+                LOG.info("Token refreshed: expires in {} seconds", localToken.getExpires_in());
 
                 synchronized(this)
                 {
@@ -107,12 +107,12 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
             }
             catch (HttpClientErrorException e)
             {
-                log.error("Error requesting authentication token: {}", e.getMessage());
+                LOG.error("Error requesting authentication token: {}", e.getMessage());
             }        
         }
         else
         {
-            log.info("Token refresh: no token, no need to refresh");
+            LOG.info("Token refresh: no token, no need to refresh");
         }
     }
     
@@ -146,7 +146,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
         try
         {
             localToken = template.postForObject("https://auth.tado.com/oauth/token", formEntity, TadoToken.class);
-            log.info("Token acquired: expires in {} seconds", localToken.getExpires_in());
+            LOG.info("Token acquired: expires in {} seconds", localToken.getExpires_in());
 
             synchronized(this)
             {
@@ -157,7 +157,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
                     delaySeconds        =Math.max(localToken.getExpires_in()-REFRESHSECONDSBEFOREEXPIRATION, MINSECONDSBEFOREREFRESH);
                     delaySeconds        =Math.min(delaySeconds, MAXSECONDSBEFOREREFRESH);
                     delayMilliseconds   =MILLISECONDSPERSECOND*delaySeconds;
-                    log.info("Scheduling token refresh every {} seconds", delayMilliseconds/MILLISECONDSPERSECOND);
+                    LOG.info("Scheduling token refresh every {} seconds", delayMilliseconds/MILLISECONDSPERSECOND);
                     timer=new Timer();
                     timer.scheduleAtFixedRate(this, delayMilliseconds, delayMilliseconds);
                 }
@@ -165,7 +165,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
         }
         catch (HttpClientErrorException e)
         {
-            log.error("Error requesting authentication token for user {}: {}", username, e.getMessage());
+            LOG.error("Error requesting authentication token for user {}: {}", username, e.getMessage());
         }
         
         return localToken;
