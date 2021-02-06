@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
+import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.TadoInterface;
 
 /**
@@ -45,4 +46,25 @@ public class HomeController
         return meResponse;
     }
 
+    /**
+     * Example method. Simply echos the account information
+     * @return Information about my account
+     */
+    @RequestMapping("/state")
+    public ResponseEntity<TadoState> state() 
+    {
+        ResponseEntity<TadoState> stateResponse;
+
+        TadoMe me=tado.tadoMe();
+        if (me!=null)
+        {
+            TadoState state=tado.tadoState(me.getHomes().get(0).getId());
+            stateResponse=ResponseEntity.ok(state);
+        }
+        else
+        {
+            stateResponse=ResponseEntity.notFound().build();
+        }
+        return stateResponse;
+    }
 }

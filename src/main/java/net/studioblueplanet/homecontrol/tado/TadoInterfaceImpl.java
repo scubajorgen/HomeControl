@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
+import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
 
@@ -211,5 +212,16 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
         ResponseEntity<TadoZone[]> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/zones", HttpMethod.GET, entity, TadoZone[].class);        
         TadoZone[] zones=response.getBody();
         return Arrays.stream(zones).collect(Collectors.toList());             
+    }
+    
+    @Override
+    public TadoState tadoState(int homeId)
+    {
+        HttpHeaders headers             = new HttpHeaders();
+        headers.setBearerAuth(token.getAccess_token());
+        HttpEntity entity               = new HttpEntity(headers);
+        ResponseEntity<TadoState> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/state", HttpMethod.GET, entity, TadoState.class);        
+        TadoState state=response.getBody();
+        return state;         
     }
 }

@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
+import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -18,7 +19,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.Test;
-import org.junit.Ignore;
 import static org.junit.Assert.*;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
@@ -243,7 +243,6 @@ public class TadoInterfaceImplTest
         assertEquals(true, result.isConsentGrantSkippable());
         
         mockServer.verify();
-
     }
 
     /**
@@ -300,4 +299,31 @@ public class TadoInterfaceImplTest
         assertEquals(null, result.get(3).getDevices().get(0).getMountingState());
         mockServer.verify();
     }
+    
+    /**
+     * Test of tadoHome method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testTadoState() throws Exception
+    {
+        System.out.println("tadoState");
+        authenticate();
+
+        mockServer.reset();
+        String body = new String(Files.readAllBytes((new File("src/test/resources/tadoState.json")).toPath()));
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/state")))
+          .andExpect(method(HttpMethod.GET))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(body)
+        );                                   
+            
+        TadoState result = tadoInterface.tadoState(123456);
+        assertEquals("AWAY", result.getPresence());
+        assertEquals(true, result.isPresenceLocked());
+
+        mockServer.verify();
+    }
+    
 }

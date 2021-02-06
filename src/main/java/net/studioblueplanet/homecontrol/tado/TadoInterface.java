@@ -9,6 +9,7 @@ import java.util.List;
 
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
+import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
 import org.springframework.web.client.RestTemplate;
@@ -54,4 +55,12 @@ public interface TadoInterface
      * @return Information on the zones and devices
      */
     public List<TadoZone>   tadoZones(int homeId);
+
+    /**
+     * Requests the state of the home, whether the owner is at home or not
+     * @param homeId Id of the home
+     * @return The tado state
+     */
+    public TadoState  tadoState(int homeId);
+
 }
