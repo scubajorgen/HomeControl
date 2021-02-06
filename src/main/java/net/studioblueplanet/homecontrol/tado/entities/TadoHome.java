@@ -5,6 +5,7 @@
  */
 package net.studioblueplanet.homecontrol.tado.entities;
 
+import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -23,7 +24,7 @@ public class TadoHome
     /** Home date time zone, e.g. Europe/Amsterdam */
     private String                  dateTimeZone;
     /** Datetime of creation in ISO format */
-    private String                  dateCreated;
+    private Date                    dateCreated;
     /** Unit of temperature, e.g. CELCIUS */
     private String                  temperatureUnit;
     /** Unclear */
@@ -63,12 +64,12 @@ public class TadoHome
         this.dateTimeZone = dateTimeZone;
     }
 
-    public String getDateCreated()
+    public Date getDateCreated()
     {
         return dateCreated;
     }
 
-    public void setDateCreated(String dateCreated)
+    public void setDateCreated(Date dateCreated)
     {
         this.dateCreated = dateCreated;
     }

@@ -5,6 +5,7 @@
  */
 package net.studioblueplanet.homecontrol.tado.entities;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -20,7 +21,7 @@ public class TadoZone
     /** Zone type, like HEATING*/
     private String                  type;
     /** Date time of creation in ISO format*/
-    private String                  dateCreated;
+    private Date                    dateCreated;
     /** List of device types used in the zones: RU02, VA02*/
     private List<String>            deviceTypes;
     /** List of devices */
@@ -66,12 +67,12 @@ public class TadoZone
         this.type = type;
     }
 
-    public String getDateCreated()
+    public Date getDateCreated()
     {
         return dateCreated;
     }
 
-    public void setDateCreated(String dateCreated)
+    public void setDateCreated(Date dateCreated)
     {
         this.dateCreated = dateCreated;
     }

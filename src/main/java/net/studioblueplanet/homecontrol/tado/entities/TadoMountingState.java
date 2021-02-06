@@ -5,6 +5,7 @@
  */
 package net.studioblueplanet.homecontrol.tado.entities;
 
+import java.util.Date;
 /**
  *
  * @author jorgen
@@ -14,9 +15,9 @@ public class TadoMountingState
     /** Mounting state */
     private String value;
     /** Datetime of last connection in ISO format e.g. 2021-02-04T07:17:19.671Z */
-    private String  timestamp;
+    private Date  timestamp;
 
-    public String isValue()
+    public String getValue()
     {
         return value;
     }
@@ -26,12 +27,12 @@ public class TadoMountingState
         this.value = value;
     }
 
-    public String getTimestamp()
+    public Date getTimestamp()
     {
         return timestamp;
     }
 
-    public void setTimestamp(String timeStamp)
+    public void setTimestamp(Date timeStamp)
     {
         this.timestamp = timeStamp;
     }    

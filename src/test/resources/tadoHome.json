@@ -1,0 +1,37 @@
+{
+  "id": 123456,
+  "name": "HQ",
+  "dateTimeZone": "Europe/Amsterdam",
+  "dateCreated": "2021-01-04T19:48:15.085Z",
+  "temperatureUnit": "CELSIUS",
+  "partner": null,
+  "simpleSmartScheduleEnabled": true,
+  "awayRadiusInMeters": 400.00,
+  "installationCompleted": true,
+  "incidentDetection": {
+    "supported": true,
+    "enabled": false
+  },
+  "autoAssistFreeTrialEnabled": false,
+  "skills": [],
+  "christmasModeEnabled": true,
+  "showAutoAssistReminders": true,
+  "contactDetails": {
+    "name": "Jorgen van der Velde",
+    "email": "user@email.com",
+    "phone": "+31612345678"
+  },
+  "address": {
+    "addressLine1": "Streetname 123",
+    "addressLine2": null,
+    "zipCode": "9737 JL",
+    "city": "Groningen",
+    "state": null,
+    "country": "NLD"
+  },
+  "geolocation": {
+    "latitude": 53.2526633,
+    "longitude": 6.5885474
+  },
+  "consentGrantSkippable": true
+}

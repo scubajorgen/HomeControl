@@ -1,0 +1,46 @@
+{
+  "name": "User name",
+  "email": "user@email.com",
+  "username": "username@email.com",
+  "id": "12345678-1234-1234-1234-0123456789AB",
+  "homes": [
+    {
+      "id": 123456,
+      "name": "HQ"
+    }
+  ],
+  "locale": "en",
+  "mobileDevices": [
+    {
+      "name": "Sergeant Major",
+      "id": 2404784,
+      "settings": {
+        "geoTrackingEnabled": true,
+        "onDemandLogRetrievalEnabled": false,
+        "pushNotifications": {
+          "lowBatteryReminder": true,
+          "awayModeReminder": true,
+          "homeModeReminder": true,
+          "openWindowReminder": true,
+          "energySavingsReportReminder": true,
+          "incidentDetection": false
+        }
+      },
+      "location": {
+        "stale": false,
+        "atHome": false,
+        "bearingFromHome": {
+          "degrees": 164.84135792101787,
+          "radians": 2.8770244391801967
+        },
+        "relativeDistanceFromHomeFence": 0.5597495393964038
+      },
+      "deviceMetadata": {
+        "platform": "Android",
+        "osVersion": "8.0.0",
+        "model": "Samsung_SM-G930F",
+        "locale": "en"
+      }
+    }
+  ]
+}

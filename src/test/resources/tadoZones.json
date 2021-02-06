@@ -1,0 +1,239 @@
+[
+  {
+    "id": 1,
+    "name": "Huiskamer",
+    "type": "HEATING",
+    "dateCreated": "2021-01-04T19:59:01.866Z",
+    "deviceTypes": [
+      "RU02",
+      "VA02",
+      "VA02"
+    ],
+    "devices": [
+      {
+        "deviceType": "RU02",
+        "serialNo": "RU3912770304",
+        "shortSerialNo": "RU3912770304",
+        "currentFwVersion": "76.1",
+        "connectionState": {
+          "value": true,
+          "timestamp": "2021-02-04T11:45:04.289Z"
+        },
+        "characteristics": {
+          "capabilities": [
+            "INSIDE_TEMPERATURE_MEASUREMENT",
+            "IDENTIFY"
+          ]
+        },
+        "batteryState": "NORMAL",
+        "duties": [
+          "ZONE_UI",
+          "CIRCUIT_DRIVER",
+          "ZONE_LEADER"
+        ]
+      },
+      {
+        "deviceType": "VA02",
+        "serialNo": "VA0487990528",
+        "shortSerialNo": "VA0487990528",
+        "currentFwVersion": "75.2",
+        "connectionState": {
+          "value": true,
+          "timestamp": "2021-02-04T11:49:22.507Z"
+        },
+        "characteristics": {
+          "capabilities": [
+            "INSIDE_TEMPERATURE_MEASUREMENT",
+            "IDENTIFY"
+          ]
+        },
+        "mountingState": {
+          "value": "CALIBRATED",
+          "timestamp": "2021-01-07T18:28:33.011Z"
+        },
+        "batteryState": "NORMAL",
+        "duties": [
+          "ZONE_UI",
+          "ZONE_DRIVER"
+        ]
+      },
+      {
+        "deviceType": "VA02",
+        "serialNo": "VA1712727296",
+        "shortSerialNo": "VA1712727296",
+        "currentFwVersion": "75.2",
+        "connectionState": {
+          "value": true,
+          "timestamp": "2021-02-04T11:49:37.664Z"
+        },
+        "characteristics": {
+          "capabilities": [
+            "INSIDE_TEMPERATURE_MEASUREMENT",
+            "IDENTIFY"
+          ]
+        },
+        "mountingState": {
+          "value": "CALIBRATED",
+          "timestamp": "2021-01-07T20:39:13.979Z"
+        },
+        "batteryState": "NORMAL",
+        "duties": [
+          "ZONE_UI",
+          "ZONE_DRIVER"
+        ]
+      }
+    ],
+    "reportAvailable": false,
+    "supportsDazzle": true,
+    "dazzleEnabled": true,
+    "dazzleMode": {
+      "supported": true,
+      "enabled": true
+    },
+    "openWindowDetection": {
+      "supported": true,
+      "enabled": true,
+      "timeoutInSeconds": 900
+    }
+  },
+  {
+    "id": 3,
+    "name": "Werkkamer",
+    "type": "HEATING",
+    "dateCreated": "2021-01-07T17:12:53.386Z",
+    "deviceTypes": [
+      "VA02"
+    ],
+    "devices": [
+      {
+        "deviceType": "VA02",
+        "serialNo": "VA0873014016",
+        "shortSerialNo": "VA0873014016",
+        "currentFwVersion": "75.2",
+        "connectionState": {
+          "value": true,
+          "timestamp": "2021-02-04T11:46:44.780Z"
+        },
+        "characteristics": {
+          "capabilities": [
+            "INSIDE_TEMPERATURE_MEASUREMENT",
+            "IDENTIFY"
+          ]
+        },
+        "mountingState": {
+          "value": "CALIBRATED",
+          "timestamp": "2021-01-13T07:10:37.257Z"
+        },
+        "batteryState": "NORMAL",
+        "duties": [
+          "ZONE_UI",
+          "ZONE_DRIVER",
+          "ZONE_LEADER"
+        ]
+      }
+    ],
+    "reportAvailable": false,
+    "supportsDazzle": true,
+    "dazzleEnabled": true,
+    "dazzleMode": {
+      "supported": true,
+      "enabled": true
+    },
+    "openWindowDetection": {
+      "supported": true,
+      "enabled": true,
+      "timeoutInSeconds": 900
+    }
+  },
+  {
+    "id": 4,
+    "name": "Badkamer",
+    "type": "HEATING",
+    "dateCreated": "2021-01-07T17:36:10.693Z",
+    "deviceTypes": [
+      "VA02"
+    ],
+    "devices": [
+      {
+        "deviceType": "VA02",
+        "serialNo": "VA4110426880",
+        "shortSerialNo": "VA4110426880",
+        "currentFwVersion": "75.2",
+        "connectionState": {
+          "value": true,
+          "timestamp": "2021-02-04T11:36:21.826Z"
+        },
+        "characteristics": {
+          "capabilities": [
+            "INSIDE_TEMPERATURE_MEASUREMENT",
+            "IDENTIFY"
+          ]
+        },
+        "mountingState": {
+          "value": "CALIBRATED",
+          "timestamp": "2021-01-07T17:41:36.026Z"
+        },
+        "batteryState": "NORMAL",
+        "duties": [
+          "ZONE_UI",
+          "ZONE_DRIVER",
+          "ZONE_LEADER"
+        ]
+      }
+    ],
+    "reportAvailable": false,
+    "supportsDazzle": true,
+    "dazzleEnabled": true,
+    "dazzleMode": {
+      "supported": true,
+      "enabled": true
+    },
+    "openWindowDetection": {
+      "supported": true,
+      "enabled": true,
+      "timeoutInSeconds": 900
+    }
+  },
+  {
+    "id": 0,
+    "name": "Hot Water",
+    "type": "HOT_WATER",
+    "dateCreated": "2021-01-04T20:11:12.565Z",
+    "deviceTypes": [
+      "RU02"
+    ],
+    "devices": [
+      {
+        "deviceType": "RU02",
+        "serialNo": "RU3912770304",
+        "shortSerialNo": "RU3912770304",
+        "currentFwVersion": "76.1",
+        "connectionState": {
+          "value": true,
+          "timestamp": "2021-02-04T11:45:04.289Z"
+        },
+        "characteristics": {
+          "capabilities": [
+            "INSIDE_TEMPERATURE_MEASUREMENT",
+            "IDENTIFY"
+          ]
+        },
+        "batteryState": "NORMAL",
+        "duties": [
+          "ZONE_UI",
+          "ZONE_DRIVER",
+          "ZONE_LEADER"
+        ]
+      }
+    ],
+    "reportAvailable": false,
+    "supportsDazzle": false,
+    "dazzleEnabled": false,
+    "dazzleMode": {
+      "supported": false
+    },
+    "openWindowDetection": {
+      "supported": false
+    }
+  }
+]

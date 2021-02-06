@@ -5,6 +5,8 @@
  */
 package net.studioblueplanet.homecontrol.tado.entities;
 
+import java.util.Date;
+
 /**
  *
  * @author jorgen
@@ -14,7 +16,7 @@ public class TadoConnectionState
     /** Connection state */
     private boolean value;
     /** Datetime of last connection in ISO format e.g. 2021-02-04T07:17:19.671Z */
-    private String  timestamp;
+    private Date  timestamp;
 
     public boolean isValue()
     {
@@ -26,12 +28,12 @@ public class TadoConnectionState
         this.value = value;
     }
 
-    public String getTimestamp()
+    public Date getTimestamp()
     {
         return timestamp;
     }
 
-    public void setTimestamp(String timeStamp)
+    public void setTimestamp(Date timeStamp)
     {
         this.timestamp = timeStamp;
     }
