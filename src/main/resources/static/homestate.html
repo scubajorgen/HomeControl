@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <script>
+      function display(response)
+      {
+        var html;
+
+        html='';
+        html+='You are '+response.presence+'<br>';
+        document.getElementById("info").innerHTML=html;
+      }
+      
+      function loadInfo() 
+      {
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() 
+          {
+              if (this.readyState == 4 && this.status == 200) 
+              {
+                display(JSON.parse(this.responseText));
+              }
+          };
+          xhttp.open("GET", "/api/state", true);
+          xhttp.setRequestHeader("Content-type", "application/json");
+          xhttp.send("");
+      }
+    </script>  
+  </head>
+  <body onload="javascript:loadInfo();">
+    <div class="container-fluid">
+      <div class="card">
+        <div class="card-header"><h1>Home info</h1></div>
+        <div class="card-body">
+          <div id="info"></div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

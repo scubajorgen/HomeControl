@@ -13,7 +13,7 @@ An account is required at tado.nl.
 
 ## Usage
 Use http://localhost:8080/main for an example of a website based on thymeleaf templates.
-Use http://localhost:8080/test.html for an example of a static website using javascript 
+Use http://localhost:8080/account.html for an example of a static website using javascript 
 and the HomeControl API (http://localhost:8080/api).
 Use your Tado credentials to log in. Authentication takes place against the OAuth
 authentication server of Tado.
