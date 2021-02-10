@@ -12,7 +12,7 @@ import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
-import org.springframework.web.client.RestTemplate;
+import net.studioblueplanet.homecontrol.tado.entities.TadoZoneState;
 
 /**
  *
@@ -61,6 +61,14 @@ public interface TadoInterface
      * @param homeId Id of the home
      * @return The tado state
      */
-    public TadoState  tadoState(int homeId);
+    public TadoState        tadoState(int homeId);
+    
+    /**
+     * Request the information of a zone
+     * @param homeId Home ID
+     * @param zoneId Zone ID
+     * @return The zone state
+     */
+    public TadoZoneState    tadoZoneState(int homeId, int zoneId);
 
 }

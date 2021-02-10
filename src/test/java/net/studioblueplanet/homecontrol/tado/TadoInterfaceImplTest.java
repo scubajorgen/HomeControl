@@ -13,6 +13,7 @@ import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
+import net.studioblueplanet.homecontrol.tado.entities.TadoZoneState;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -301,7 +302,7 @@ public class TadoInterfaceImplTest
     }
     
     /**
-     * Test of tadoHome method, of class TadoInterfaceImpl.
+     * Test of tadoState method, of class TadoInterfaceImpl.
      */
     @Test
     public void testTadoState() throws Exception
@@ -326,4 +327,97 @@ public class TadoInterfaceImplTest
         mockServer.verify();
     }
     
+    /**
+     * Test of tadoZoneState method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testTadoZoneStateHeating() throws Exception
+    {
+        System.out.println("tadoZoneState - Heating");
+        authenticate();
+
+        mockServer.reset();
+        String body = new String(Files.readAllBytes((new File("src/test/resources/tadoZoneState.json")).toPath()));
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/zones/1/state")))
+          .andExpect(method(HttpMethod.GET))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(body)
+        );                                   
+            
+        TadoZoneState result = tadoInterface.tadoZoneState(123456, 1);
+        assertEquals("AWAY", result.getTadoMode());
+        assertEquals(false, result.isGeolocationOverride());
+        assertNull(result.getGeolocationOverrideDisableTime());
+        assertNull(result.getPreparation());
+        assertEquals("HEATING", result.getSetting().getType());
+        assertEquals("ON", result.getSetting().getPower());
+        assertEquals(17.00, result.getSetting().getTemperature().getCelsius(), 0.0001);
+        assertEquals(62.60, result.getSetting().getTemperature().getFahrenheit(), 0.0001);
+        assertNull(result.getOverlayType());
+        assertNull(result.getOverlay());
+        assertNull(result.getOpenWindow());
+        assertNull(result.getNextScheduleChange());
+        assertEquals("2021-02-08 06:00:00", dateFormat.format(result.getNextTimeBlock().getStart()));
+        assertEquals("ONLINE", result.getLink().getState());
+        
+        assertEquals("PERCENTAGE", result.getActivityDataPoints().getHeatingPower().getType());
+        assertEquals(32.00, result.getActivityDataPoints().getHeatingPower().getPercentage(), 0.0001);
+        assertEquals("2021-02-06 19:20:28", dateFormat.format(result.getActivityDataPoints().getHeatingPower().getTimestamp()));
+        
+        assertEquals("TEMPERATURE", result.getSensorDataPoints().getInsideTemperature().getType());
+        assertEquals(16.97, result.getSensorDataPoints().getInsideTemperature().getCelsius(), 0.0001);
+        assertEquals(62.55, result.getSensorDataPoints().getInsideTemperature().getFahrenheit(), 0.0001);
+        assertEquals("2021-02-06 19:18:03", dateFormat.format(result.getSensorDataPoints().getInsideTemperature().getTimestamp()));
+        assertEquals(0.1, result.getSensorDataPoints().getInsideTemperature().getPrecision().getCelsius(), 0.0001);
+        assertEquals(0.1, result.getSensorDataPoints().getInsideTemperature().getPrecision().getFahrenheit(), 0.0001);
+
+        assertEquals("PERCENTAGE", result.getSensorDataPoints().getHumidity().getType());
+        assertEquals(34.30, result.getSensorDataPoints().getHumidity().getPercentage(), 0.0001);
+        assertEquals("2021-02-06 19:18:04", dateFormat.format(result.getSensorDataPoints().getHumidity().getTimestamp()));
+        
+        mockServer.verify();
+    }
+
+    /**
+     * Test of tadoZoneState method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testTadoZoneStateHotwater() throws Exception
+    {
+        System.out.println("tadoZoneState - HW");
+        authenticate();
+
+        mockServer.reset();
+        String body = new String(Files.readAllBytes((new File("src/test/resources/tadoZoneStateHw.json")).toPath()));
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/zones/0/state")))
+          .andExpect(method(HttpMethod.GET))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(body)
+        );                                   
+            
+        TadoZoneState result = tadoInterface.tadoZoneState(123456, 0);
+        assertEquals("AWAY", result.getTadoMode());
+        assertEquals(false, result.isGeolocationOverride());
+        assertNull(result.getGeolocationOverrideDisableTime());
+        assertNull(result.getPreparation());
+        assertEquals("HOT_WATER", result.getSetting().getType());
+        assertEquals("OFF", result.getSetting().getPower());
+        assertNull(result.getSetting().getTemperature());
+        assertNull(result.getOverlayType());
+        assertNull(result.getOverlay());
+        assertNull(result.getOpenWindow());
+        assertNull(result.getNextScheduleChange());
+        assertEquals("2021-02-07 21:00:00", dateFormat.format(result.getNextTimeBlock().getStart()));
+        assertEquals("ONLINE", result.getLink().getState());
+        
+        assertNull(result.getActivityDataPoints().getHeatingPower());
+        assertNull(result.getSensorDataPoints().getInsideTemperature());
+        assertNull(result.getSensorDataPoints().getHumidity());
+        
+        mockServer.verify();
+    }
 }

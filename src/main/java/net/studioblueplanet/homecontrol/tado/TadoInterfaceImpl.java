@@ -16,6 +16,7 @@ import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
+import net.studioblueplanet.homecontrol.tado.entities.TadoZoneState;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -223,5 +224,17 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
         ResponseEntity<TadoState> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/state", HttpMethod.GET, entity, TadoState.class);        
         TadoState state=response.getBody();
         return state;         
+    }
+    
+    @Override
+    public TadoZoneState tadoZoneState(int homeId, int zoneId)
+    {
+        HttpHeaders headers             = new HttpHeaders();
+        headers.setBearerAuth(token.getAccess_token());
+        HttpEntity entity               = new HttpEntity(headers);
+        ResponseEntity<TadoZoneState> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/zones/"+zoneId+"/state", 
+                                                                   HttpMethod.GET, entity, TadoZoneState.class);        
+        TadoZoneState state=response.getBody();
+        return state;            
     }
 }

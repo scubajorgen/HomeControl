@@ -1,0 +1,23 @@
+{
+  "tadoMode": "AWAY",
+  "geolocationOverride": false,
+  "geolocationOverrideDisableTime": null,
+  "preparation": null,
+  "setting": {
+    "type": "HOT_WATER",
+    "power": "OFF",
+    "temperature": null
+  },
+  "overlayType": null,
+  "overlay": null,
+  "openWindow": null,
+  "nextScheduleChange": null,
+  "nextTimeBlock": {
+    "start": "2021-02-07T21:00:00.000Z"
+  },
+  "link": {
+    "state": "ONLINE"
+  },
+  "activityDataPoints": {},
+  "sensorDataPoints": {}
+}
