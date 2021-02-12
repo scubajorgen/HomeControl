@@ -20,6 +20,7 @@ public class TadoZoneState
     private String                  overlayType;
     private Object                  overlay;
     private Object                  openWindow;
+    private boolean                 openWindowDetected;
     private TadoScheduleChange      nextScheduleChange;
     private TadoTimeBlock           nextTimeBlock;
     private TadoLink                link;
@@ -104,6 +105,16 @@ public class TadoZoneState
     public void setOpenWindow(Object openWindow)
     {
         this.openWindow = openWindow;
+    }
+
+    public boolean isOpenWindowDetected()
+    {
+        return openWindowDetected;
+    }
+
+    public void setOpenWindowDetected(boolean openWindowDetected)
+    {
+        this.openWindowDetected = openWindowDetected;
     }
 
     public TadoScheduleChange getNextScheduleChange()

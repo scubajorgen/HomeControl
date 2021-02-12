@@ -10,8 +10,9 @@ import java.net.URI;
 import java.text.SimpleDateFormat;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
-import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
+import net.studioblueplanet.homecontrol.tado.entities.TadoPresence.TadoHomePresence;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
+import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZoneState;
 import org.junit.After;
@@ -323,6 +324,7 @@ public class TadoInterfaceImplTest
         TadoState result = tadoInterface.tadoState(123456);
         assertEquals("AWAY", result.getPresence());
         assertEquals(true, result.isPresenceLocked());
+        assertEquals(false, result.isShowHomePresenceSwitchButton());
 
         mockServer.verify();
     }
@@ -418,6 +420,36 @@ public class TadoInterfaceImplTest
         assertNull(result.getSensorDataPoints().getInsideTemperature());
         assertNull(result.getSensorDataPoints().getHumidity());
         
+        mockServer.verify();
+    }
+    /**
+     * Test of tadoZoneState method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testSetTadoPresence() throws Exception
+    {
+        System.out.println("setTadoPresence");
+        authenticate();
+
+        mockServer.reset();
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/presenceLock")))
+          .andExpect(method(HttpMethod.PUT))
+          .andExpect(content().string("{\"homePresence\":\"AWAY\"}"))
+          .andRespond(withStatus(HttpStatus.NO_CONTENT)
+        );                                       
+        tadoInterface.setTadoPresence(123456, TadoHomePresence.AWAY);
+        mockServer.verify();
+
+        mockServer.reset();
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/presenceLock")))
+          .andExpect(method(HttpMethod.PUT))
+          .andExpect(content().string("{\"homePresence\":\"HOME\"}"))
+          .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+          .andRespond(withStatus(HttpStatus.NO_CONTENT)
+        );                                       
+        tadoInterface.setTadoPresence(123456, TadoHomePresence.HOME);
         mockServer.verify();
     }
 }

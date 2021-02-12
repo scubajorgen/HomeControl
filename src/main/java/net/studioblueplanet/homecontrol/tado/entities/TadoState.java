@@ -15,6 +15,8 @@ public class TadoState
     private String presence;
     /** ? */
     private boolean presenceLocked;
+    /** Show the presence switch button - optional */
+    private boolean showHomePresenceSwitchButton;
 
     public boolean isPresenceLocked()
     {
@@ -34,5 +36,15 @@ public class TadoState
     public void setPresence(String presence)
     {
         this.presence = presence;
+    }
+
+    public boolean isShowHomePresenceSwitchButton()
+    {
+        return showHomePresenceSwitchButton;
+    }
+
+    public void setShowHomePresenceSwitchButton(boolean showHomePresenceSwitchButton)
+    {
+        this.showHomePresenceSwitchButton = showHomePresenceSwitchButton;
     }
 }

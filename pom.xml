@@ -36,6 +36,11 @@
             <groupId>junit</groupId>
             <version>4.12</version>
         </dependency>
+        <dependency>
+            <groupId>com.gitlab.haynes</groupId>
+            <artifactId>orika-spring-boot-starter</artifactId>
+            <version>1.26.0</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

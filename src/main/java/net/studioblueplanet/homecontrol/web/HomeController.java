@@ -3,16 +3,22 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package net.studioblueplanet.homecontrol;
+package net.studioblueplanet.homecontrol.web;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PutMapping;
+
+import net.studioblueplanet.homecontrol.service.AccountService;
+import net.studioblueplanet.homecontrol.service.entities.Account;
 
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.TadoInterface;
+import org.springframework.http.HttpStatus;
 
 /**
  *
@@ -24,7 +30,33 @@ public class HomeController
 {
     @Autowired
     TadoInterface tado;
+    
+    @Autowired
+    AccountService accountService;
 
+    
+    /**
+     * Example method. Simply echos the account information
+     * @return Information about my account
+     */
+    @RequestMapping("/account")
+    public ResponseEntity<Account> account() 
+    {
+        ResponseEntity<Account> accountResponse;
+
+        Account account=accountService.getAccount();
+        if (account!=null)
+        {
+            accountResponse=ResponseEntity.ok(account);
+        }
+        else
+        {
+            accountResponse=ResponseEntity.notFound().build();
+        }
+        return accountResponse;
+    }
+
+    
     /**
      * Example method. Simply echos the account information
      * @return Information about my account
@@ -66,5 +98,14 @@ public class HomeController
             stateResponse=ResponseEntity.notFound().build();
         }
         return stateResponse;
+    }
+    
+    @PutMapping("/presence")
+    public ResponseEntity<String> presence(@RequestBody String presence) 
+    {
+        String response;
+        
+        response="";
+        return new ResponseEntity(HttpStatus.OK);
     }
 }

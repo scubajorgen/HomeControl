@@ -18,6 +18,8 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.client.RestTemplate;
+import ma.glasnost.orika.MapperFactory;
+import ma.glasnost.orika.impl.DefaultMapperFactory;
 
 @SpringBootApplication
 public class Application
@@ -49,5 +51,11 @@ public class Application
         {
             LOG.info("Application started");
         };
+    }
+    
+    @Bean
+    public MapperFactory getMapperFactory()
+    {
+        return new DefaultMapperFactory.Builder().build();
     }
 }

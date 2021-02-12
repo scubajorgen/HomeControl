@@ -8,6 +8,7 @@ package net.studioblueplanet.homecontrol.tado;
 import java.util.List;
 
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
+import net.studioblueplanet.homecontrol.tado.entities.TadoPresence.TadoHomePresence;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
@@ -71,4 +72,9 @@ public interface TadoInterface
      */
     public TadoZoneState    tadoZoneState(int homeId, int zoneId);
 
+    /**
+     * Sets the presence to HOME or AWAY
+     * @param presence The presence
+     */
+    public void             setTadoPresence(int homeId, TadoHomePresence presence);
 }
