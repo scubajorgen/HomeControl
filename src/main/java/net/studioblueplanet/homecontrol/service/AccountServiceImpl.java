@@ -5,6 +5,7 @@
  */
 package net.studioblueplanet.homecontrol.service;
 
+import javax.annotation.PostConstruct;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.MapperFacade;
 import net.studioblueplanet.homecontrol.service.entities.Account;
@@ -31,13 +32,12 @@ public class AccountServiceImpl implements AccountService
     private Account account;
     private boolean mappingRegistered=false;
     
-    /**
-     * Constructor. Initialises the mapping between TadoMe and Account.
-     */
-    private AccountServiceImpl()
+    @PostConstruct
+    public void init()
     {
-
+        registerMappings();
     }
+    
 
     /**
      * Register the mappings used in this class.
@@ -62,19 +62,17 @@ public class AccountServiceImpl implements AccountService
     private void retrieveAccountFromTado()
     {
         TadoMe me;
-
+/*
         if (!mappingRegistered)
         {
             registerMappings();
         }
-        
+*/        
         MapperFacade mapper = mapperFactory.getMapperFacade();
         
         me=tado.tadoMe();
         
         account=mapper.map(me, Account.class);
-
-System.out.println();
     }
     
     @Override

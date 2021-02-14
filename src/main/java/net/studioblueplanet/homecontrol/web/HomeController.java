@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
 
 import net.studioblueplanet.homecontrol.service.AccountService;
+import net.studioblueplanet.homecontrol.service.HomeService;
 import net.studioblueplanet.homecontrol.service.entities.Account;
+import net.studioblueplanet.homecontrol.service.entities.Home;
+import net.studioblueplanet.homecontrol.service.entities.HomeState;
 
-import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
-import net.studioblueplanet.homecontrol.tado.entities.TadoState;
-import net.studioblueplanet.homecontrol.tado.TadoInterface;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -29,11 +29,10 @@ import org.springframework.http.HttpStatus;
 public class HomeController 
 {
     @Autowired
-    TadoInterface tado;
-    
-    @Autowired
     AccountService accountService;
 
+    @Autowired
+    HomeService homeService;
     
     /**
      * Example method. Simply echos the account information
@@ -56,56 +55,63 @@ public class HomeController
         return accountResponse;
     }
 
-    
-    /**
-     * Example method. Simply echos the account information
-     * @return Information about my account
-     */
-    @RequestMapping("/me")
-    public ResponseEntity<TadoMe> me() 
-    {
-        ResponseEntity<TadoMe> meResponse;
-
-        TadoMe me=tado.tadoMe();
-        if (me!=null)
-        {
-            meResponse=ResponseEntity.ok(me);
-        }
-        else
-        {
-            meResponse=ResponseEntity.notFound().build();
-        }
-        return meResponse;
-    }
-
     /**
      * Example method. Simply echos the account information
      * @return Information about my account
      */
     @RequestMapping("/state")
-    public ResponseEntity<TadoState> state() 
+    public ResponseEntity<HomeState> state() 
     {
-        ResponseEntity<TadoState> stateResponse;
+        ResponseEntity<HomeState> stateResponse;
+        HomeState                 state;
 
-        TadoMe me=tado.tadoMe();
-        if (me!=null)
+        Account account=accountService.getAccount();
+        if (account!=null)
         {
-            TadoState state=tado.tadoState(me.getHomes().get(0).getId());
+            state=homeService.getHomeState(account.getHomes().get(0).getId());
             stateResponse=ResponseEntity.ok(state);
         }
         else
         {
             stateResponse=ResponseEntity.notFound().build();
-        }
+        }    
         return stateResponse;
     }
     
     @PutMapping("/presence")
     public ResponseEntity<String> presence(@RequestBody String presence) 
     {
-        String response;
-        
-        response="";
-        return new ResponseEntity(HttpStatus.OK);
+        ResponseEntity response;
+        Account account=accountService.getAccount();
+        if (account!=null)
+
+        {
+            homeService.setPresence(account.getHomes().get(0).getId(), presence);
+            response=new ResponseEntity(HttpStatus.OK);
+        }
+        else
+        {
+            response=new ResponseEntity(HttpStatus.PRECONDITION_FAILED);
+        }
+        return response;
+    }
+
+    @RequestMapping("/home")
+    public ResponseEntity<Home> home() 
+    {
+        ResponseEntity<Home>    homeResponse;
+        Home                    home;
+
+        Account account=accountService.getAccount();
+        if (account!=null)
+        {
+            home=homeService.getHome(account.getHomes().get(0).getId());
+            homeResponse=ResponseEntity.ok(home);
+        }
+        else
+        {
+            homeResponse=ResponseEntity.notFound().build();
+        }    
+        return homeResponse;
     }
 }

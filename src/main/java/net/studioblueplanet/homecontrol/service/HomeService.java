@@ -7,6 +7,7 @@ package net.studioblueplanet.homecontrol.service;
 
 import net.studioblueplanet.homecontrol.service.entities.Account;
 import net.studioblueplanet.homecontrol.service.entities.Home;
+import net.studioblueplanet.homecontrol.service.entities.HomeState;
 
 /**
  *
@@ -14,5 +15,9 @@ import net.studioblueplanet.homecontrol.service.entities.Home;
  */
 public interface HomeService
 {
-    public Home getHome();
+    public Home getHome(int homeId);
+    
+    public HomeState getHomeState(int homeId);
+    
+    public void setPresence(int homeId, String presence);
 }
