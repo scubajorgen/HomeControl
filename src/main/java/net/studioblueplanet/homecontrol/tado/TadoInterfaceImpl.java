@@ -5,12 +5,15 @@
  */
 package net.studioblueplanet.homecontrol.tado;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
 
+import net.studioblueplanet.homecontrol.tado.entities.TadoAccount;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence;
@@ -39,15 +42,14 @@ import org.slf4j.LoggerFactory;
  */
 public class TadoInterfaceImpl extends TimerTask implements TadoInterface
 {
+    private static final long   TIMERMILLISECONDS             =10000L;
     private static final long   MILLISECONDSPERSECOND         =1000L;
-    private static final int    REFRESHSECONDSBEFOREEXPIRATION=20;
-    private static final int    MINSECONDSBEFOREREFRESH       =2;
-    private static final int    MAXSECONDSBEFOREREFRESH       =120;
     private static final Logger LOG = LoggerFactory.getLogger(TadoInterfaceImpl.class);    
 
     // Guarded data
-    private TadoToken           token;
     private Timer               timer;
+    private List<TadoAccount>   accounts;
+    private TadoAccount         loggedInAccount;
     
     @Autowired
     private RestTemplate  template;
@@ -57,8 +59,9 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     {
         synchronized (this)
         {
-            token=null;
-            timer=null;
+            timer=new Timer();
+            timer.scheduleAtFixedRate(this, TIMERMILLISECONDS, TIMERMILLISECONDS);
+            accounts=new ArrayList<>();
         }
     }
     
@@ -72,47 +75,67 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     }
     
     /**
+     * Find the account if it already exists.
+     * @param username Username to find
+     * @return The account or null if it not exists
+     */
+    private TadoAccount findAccount(String username)
+    {
+        TadoAccount account;
+        account = accounts.stream()
+                    .filter(ac -> username.equals(ac.getUsername()))
+                    .findAny()
+                    .orElse(null);    
+        return account;
+    }
+    
+    /**
      * Refresh the authentication token
      */
     private void refreshToken()
     {
-        TadoToken localToken;
+        TadoToken               localToken;
+        TadoAccount             account;
+        Iterator<TadoAccount>   it;
      
-        synchronized(this)
+        it=accounts.iterator();
+        while (it.hasNext())
         {
-            localToken=token;
-        }     
-        if (localToken!=null)
-        {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-            MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<String, String>();
-            requestBody.add("client_id", "tado-web-app");
-            requestBody.add("scope", "home.user");
-            requestBody.add("grant_type", "refresh_token");
-            requestBody.add("refresh_token", localToken.getRefresh_token());
-            requestBody.add("client_secret", "wZaRN7rpjn3FoNyF5IFuxg9uMzYJcvOoQ8QWiIqS3hfk6gLhVlG57j5YNoZL2Rtc");
-
-            HttpEntity formEntity = new HttpEntity<MultiValueMap<String, String>>(requestBody, headers);
-            try
+            synchronized(this)
             {
-                localToken = template.postForObject("https://auth.tado.com/oauth/token", formEntity, TadoToken.class);        
-                LOG.info("Token refreshed: expires in {} seconds", localToken.getExpires_in());
+                account=it.next();
+                localToken=account.getToken();
+            }     
 
-                synchronized(this)
+            if ((localToken!=null) && account.needsRefresh())
+            {
+                LOG.info("Token for {} expires in {} seconds, refresh needed", account.getUsername(), account.expiresIn());
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+                MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<String, String>();
+                requestBody.add("client_id", "tado-web-app");
+                requestBody.add("scope", "home.user");
+                requestBody.add("grant_type", "refresh_token");
+                requestBody.add("refresh_token", localToken.getRefresh_token());
+                requestBody.add("client_secret", "wZaRN7rpjn3FoNyF5IFuxg9uMzYJcvOoQ8QWiIqS3hfk6gLhVlG57j5YNoZL2Rtc");
+
+                HttpEntity formEntity = new HttpEntity<MultiValueMap<String, String>>(requestBody, headers);
+                try
                 {
-                    token=localToken;
+                    localToken = template.postForObject("https://auth.tado.com/oauth/token", formEntity, TadoToken.class);        
+                    LOG.info("Token for {} refreshed: expires in {} seconds", account.getUsername(), localToken.getExpires_in());
+
+                    synchronized(this)
+                    {
+                        account.setToken(localToken);
+                    }
                 }
+                catch (HttpClientErrorException e)
+                {
+                    LOG.error("Error requesting authentication token: {}", e.getMessage());
+                }        
             }
-            catch (HttpClientErrorException e)
-            {
-                LOG.error("Error requesting authentication token: {}", e.getMessage());
-            }        
-        }
-        else
-        {
-            LOG.info("Token refresh: no token, no need to refresh");
         }
     }
     
@@ -127,45 +150,60 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     {
         int         delaySeconds;
         long        delayMilliseconds;
+        boolean     accountExists;
         TadoToken   localToken;
-
-        signOut();
-        localToken=null;
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<String, String>();
-        requestBody.add("client_id", "tado-web-app");
-        requestBody.add("scope", "home.user");
-        requestBody.add("grant_type", "password");
-        requestBody.add("username", username);
-        requestBody.add("password", password);
-        requestBody.add("client_secret", "wZaRN7rpjn3FoNyF5IFuxg9uMzYJcvOoQ8QWiIqS3hfk6gLhVlG57j5YNoZL2Rtc");
-
-        HttpEntity formEntity = new HttpEntity<MultiValueMap<String, String>>(requestBody, headers);
-        try
+        TadoAccount account;
+        
+        synchronized (this)
         {
-            localToken = template.postForObject("https://auth.tado.com/oauth/token", formEntity, TadoToken.class);
-            LOG.info("Token acquired: expires in {} seconds", localToken.getExpires_in());
-
-            synchronized(this)
+            localToken=null;
+            account=findAccount(username);
+            if (account!=null)
             {
-                token=localToken;
-                // Only the 1st authentication: schedule a timer
-                if (timer==null)
-                {
-                    delaySeconds        =Math.max(localToken.getExpires_in()-REFRESHSECONDSBEFOREEXPIRATION, MINSECONDSBEFOREREFRESH);
-                    delaySeconds        =Math.min(delaySeconds, MAXSECONDSBEFOREREFRESH);
-                    delayMilliseconds   =MILLISECONDSPERSECOND*delaySeconds;
-                    LOG.info("Scheduling token refresh every {} seconds", delayMilliseconds/MILLISECONDSPERSECOND);
-                    timer=new Timer();
-                    timer.scheduleAtFixedRate(this, delayMilliseconds, delayMilliseconds);
-                }
+                loggedInAccount=account;
+                localToken=account.getToken();
+                LOG.info("Account found for {}: acquired {}, expires {} (in {} seconds)", username, account.getLastRefresh(), account.expiryDate(), account.expiresIn());
             }
         }
-        catch (HttpClientErrorException e)
+        if (localToken==null)
         {
-            LOG.error("Error requesting authentication token for user {}: {}", username, e.getMessage());
+            signOut();
+            localToken=null;
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<String, String>();
+            requestBody.add("client_id", "tado-web-app");
+            requestBody.add("scope", "home.user");
+            requestBody.add("grant_type", "password");
+            requestBody.add("username", username);
+            requestBody.add("password", password);
+            requestBody.add("client_secret", "wZaRN7rpjn3FoNyF5IFuxg9uMzYJcvOoQ8QWiIqS3hfk6gLhVlG57j5YNoZL2Rtc");
+
+            HttpEntity formEntity = new HttpEntity<MultiValueMap<String, String>>(requestBody, headers);
+            try
+            {
+                localToken = template.postForObject("https://auth.tado.com/oauth/token", formEntity, TadoToken.class);
+                LOG.info("Token acquired for {}: expires in {} seconds", username, localToken.getExpires_in());
+
+                synchronized(this)
+                {
+                    if (account!=null)
+                    {
+                        account.setToken(localToken);
+                    }
+                    else
+                    {
+                        account=new TadoAccount(username, password, localToken);
+                        accounts.add(account);
+                        loggedInAccount=account;
+                    }
+                }
+            }
+            catch (HttpClientErrorException e)
+            {
+                LOG.error("Error requesting authentication token for user {}: {}", username, e.getMessage());
+            }
         }
         
         return localToken;
@@ -175,7 +213,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
      {
         synchronized(this)
         {
-            token=null;
+            loggedInAccount=null;
         }         
      }
     
@@ -187,7 +225,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     public TadoMe tadoMe()
     {
         HttpHeaders headers             = new HttpHeaders();
-        headers.setBearerAuth(token.getAccess_token());
+        headers.setBearerAuth(loggedInAccount.getToken().getAccess_token());
         HttpEntity entity               = new HttpEntity(headers);
         ResponseEntity<TadoMe> response = template.exchange("https://my.tado.com/api/v2/me/", HttpMethod.GET, entity, TadoMe.class);        
         TadoMe me=response.getBody();
@@ -198,7 +236,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     public TadoHome tadoHome(int homeId)
     {
         HttpHeaders headers             = new HttpHeaders();
-        headers.setBearerAuth(token.getAccess_token());
+        headers.setBearerAuth(loggedInAccount.getToken().getAccess_token());
         HttpEntity entity               = new HttpEntity(headers);
         ResponseEntity<TadoHome> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId, HttpMethod.GET, entity, TadoHome.class);        
         TadoHome home=response.getBody();
@@ -209,7 +247,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     public List<TadoZone> tadoZones(int homeId)
     {
         HttpHeaders headers             = new HttpHeaders();
-        headers.setBearerAuth(token.getAccess_token());
+        headers.setBearerAuth(loggedInAccount.getToken().getAccess_token());
         HttpEntity entity               = new HttpEntity(headers);
         ResponseEntity<TadoZone[]> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/zones", HttpMethod.GET, entity, TadoZone[].class);        
         TadoZone[] zones=response.getBody();
@@ -220,7 +258,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     public TadoState tadoState(int homeId)
     {
         HttpHeaders headers             = new HttpHeaders();
-        headers.setBearerAuth(token.getAccess_token());
+        headers.setBearerAuth(loggedInAccount.getToken().getAccess_token());
         HttpEntity entity               = new HttpEntity(headers);
         ResponseEntity<TadoState> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/state", HttpMethod.GET, entity, TadoState.class);        
         TadoState state=response.getBody();
@@ -231,7 +269,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     public TadoZoneState tadoZoneState(int homeId, int zoneId)
     {
         HttpHeaders headers             = new HttpHeaders();
-        headers.setBearerAuth(token.getAccess_token());
+        headers.setBearerAuth(loggedInAccount.getToken().getAccess_token());
         HttpEntity entity               = new HttpEntity(headers);
         ResponseEntity<TadoZoneState> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/zones/"+zoneId+"/state", 
                                                                    HttpMethod.GET, entity, TadoZoneState.class);        
@@ -247,7 +285,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
         HttpHeaders headers             = new HttpHeaders();
         thePresence=new TadoPresence();
         thePresence.setHomePresence(presence);
-        headers.setBearerAuth(token.getAccess_token());
+        headers.setBearerAuth(loggedInAccount.getToken().getAccess_token());
         HttpEntity<TadoPresence> entity        = new HttpEntity<>(thePresence, headers);
         ResponseEntity<String> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/presenceLock", 
                                                             HttpMethod.PUT, entity, String.class);        
