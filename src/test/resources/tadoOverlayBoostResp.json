@@ -1,0 +1,19 @@
+{
+  "type": "MANUAL",
+  "setting": {
+    "type": "HEATING",
+    "power": "ON",
+    "temperature": {
+      "celsius": 25,
+      "fahrenheit": 77
+    }
+  },
+  "termination": {
+    "type": "TIMER",
+    "typeSkillBasedApp": "TIMER",
+    "durationInSeconds": 1800,
+    "expiry": "2021-02-15T07:52:14Z",
+    "remainingTimeInSeconds": 1799,
+    "projectedExpiry": "2021-02-15T07:52:14Z"
+  }
+}

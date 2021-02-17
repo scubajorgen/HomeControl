@@ -30,7 +30,6 @@ public class AccountServiceImpl implements AccountService
     private MapperFactory mapperFactory;
     
     private Account account;
-    private boolean mappingRegistered=false;
     
     @PostConstruct
     public void init()
@@ -44,6 +43,7 @@ public class AccountServiceImpl implements AccountService
      */
     private void registerMappings()
     {
+        
         mapperFactory.classMap(TadoMe.class, Account.class)
         .byDefault()
         .register();
@@ -51,8 +51,6 @@ public class AccountServiceImpl implements AccountService
         mapperFactory.classMap(TadoHome.class, HomeId.class)
                 .byDefault()
                 .register();
-
-        mappingRegistered=true;
     }
     
     /**
@@ -62,17 +60,19 @@ public class AccountServiceImpl implements AccountService
     private void retrieveAccountFromTado()
     {
         TadoMe me;
-/*
-        if (!mappingRegistered)
-        {
-            registerMappings();
-        }
-*/        
+
         MapperFacade mapper = mapperFactory.getMapperFacade();
         
         me=tado.tadoMe();
         
-        account=mapper.map(me, Account.class);
+        if (me!=null)
+        {
+            account=mapper.map(me, Account.class);
+        }
+        else
+        {
+            account=null;
+        }
     }
     
     @Override

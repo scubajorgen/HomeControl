@@ -5,6 +5,11 @@
  */
 package net.studioblueplanet.homecontrol.tado.entities;
 
+import java.util.Base64;
+import java.util.Base64.Decoder;
+import java.util.Date;
+import org.json.simple.JSONObject;  
+import org.json.simple.JSONValue;  
 /**
  *
  * @author jorgen
@@ -85,5 +90,16 @@ public class TadoToken
         this.jti = jti;
     }
     
+    public Date getAccessTokenExpires()
+    {
+        Date date;
+        String[] split_string   = access_token.split("\\.");
+        Decoder decoder         = Base64.getUrlDecoder();
+        String payload          = new String(decoder.decode(split_string[1]));
+        Object object           =JSONValue.parse(payload);
+        JSONObject jsonObject   =(JSONObject)object;
+        date=new Date((long)(jsonObject.get("exp"))*1000);
+        return date;
+    }
     
 }

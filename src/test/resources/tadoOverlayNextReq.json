@@ -1,0 +1,13 @@
+{
+  "termination": {
+    "typeSkillBasedApp": "NEXT_TIME_BLOCK"
+  },
+  "setting": {
+    "type": "HEATING",
+    "power": "ON",
+    "temperature": {
+      "celsius": 16,
+      "fahrenheit": 60.8
+    }
+  }
+}

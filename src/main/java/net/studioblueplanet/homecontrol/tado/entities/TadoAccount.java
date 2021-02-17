@@ -76,12 +76,34 @@ public class TadoAccount
     
     public Date expiryDate()
     {
-        return new Date(lastRefresh.getTime()+token.getExpires_in()*MILLISECONDSPERSECOND);
+        Date date;
+        
+        if (token!=null)
+        {
+            date=token.getAccessTokenExpires();          
+        }
+        else
+        {
+            date=null;
+        }
+        
+        return date;
     }
 
     public int expiresIn()
     {
-        return token.getExpires_in()-(int)((System.currentTimeMillis()-lastRefresh.getTime())/MILLISECONDSPERSECOND);
+        int seconds;
+        
+        if (token!=null)
+        {
+            seconds=Math.max(token.getExpires_in()-(int)((System.currentTimeMillis()-lastRefresh.getTime())/MILLISECONDSPERSECOND),0);          
+        }
+        else
+        {
+            seconds=0;
+        }
+        
+        return seconds;
     }
     
     public boolean needsRefresh()

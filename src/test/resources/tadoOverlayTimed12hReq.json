@@ -1,0 +1,15 @@
+{
+  "type": "MANUAL",
+  "setting": {
+    "type": "HEATING",
+    "power": "ON",
+    "temperature": {
+      "celsius": 16,
+      "fahrenheit": 60.8
+    }
+  },
+  "termination": {
+    "typeSkillBasedApp": "TIMER",
+    "durationInSeconds": 43200
+  }
+}

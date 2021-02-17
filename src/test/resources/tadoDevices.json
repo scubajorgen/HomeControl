@@ -1,0 +1,68 @@
+[
+  {
+    "deviceType": "IB01",
+    "serialNo": "IB2785352960",
+    "shortSerialNo": "IB2785352960",
+    "connected": true,
+    "connectionState": {
+      "value": true,
+      "timestamp": "2021-02-17T15:44:45.763Z"
+    },
+    "registeredToHome": true
+  },
+  {
+    "deviceType": "RU02",
+    "serialNo": "RU3912770304",
+    "shortSerialNo": "RU3912770304",
+    "connected": true,
+    "connectionState": {
+      "value": true,
+      "timestamp": "2021-02-17T15:47:48.815Z"
+    },
+    "registeredToHome": true
+  },
+  {
+    "deviceType": "VA02",
+    "serialNo": "VA0487990528",
+    "shortSerialNo": "VA0487990528",
+    "connected": true,
+    "connectionState": {
+      "value": true,
+      "timestamp": "2021-02-17T15:48:07.612Z"
+    },
+    "registeredToHome": true
+  },
+  {
+    "deviceType": "VA02",
+    "serialNo": "VA0873014016",
+    "shortSerialNo": "VA0873014016",
+    "connected": true,
+    "connectionState": {
+      "value": true,
+      "timestamp": "2021-02-17T15:43:27.356Z"
+    },
+    "registeredToHome": true
+  },
+  {
+    "deviceType": "VA02",
+    "serialNo": "VA1712727296",
+    "shortSerialNo": "VA1712727296",
+    "connected": true,
+    "connectionState": {
+      "value": true,
+      "timestamp": "2021-02-17T15:48:34.337Z"
+    },
+    "registeredToHome": true
+  },
+  {
+    "deviceType": "VA02",
+    "serialNo": "VA4110426880",
+    "shortSerialNo": "VA4110426880",
+    "connected": true,
+    "connectionState": {
+      "value": true,
+      "timestamp": "2021-02-17T15:36:07.273Z"
+    },
+    "registeredToHome": true
+  }
+]

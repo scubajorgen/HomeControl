@@ -6,6 +6,7 @@
 package net.studioblueplanet.homecontrol;
 
 import net.studioblueplanet.homecontrol.tado.TadoInterface;
+import net.studioblueplanet.homecontrol.tado.TadoInterfaceErrorHandling;
 import net.studioblueplanet.homecontrol.tado.TadoInterfaceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,9 @@ public class Application
     public RestTemplate restTemplate(RestTemplateBuilder builder) 
     {
         builder=new RestTemplateBuilder();
-        return builder.build();
+        return builder
+                .errorHandler(new TadoInterfaceErrorHandling())
+                .build();
     } 
     
     @Bean
@@ -54,7 +57,7 @@ public class Application
     }
     
     @Bean
-    public MapperFactory getMapperFactory()
+    public MapperFactory mapperFactory()
     {
         return new DefaultMapperFactory.Builder().build();
     }

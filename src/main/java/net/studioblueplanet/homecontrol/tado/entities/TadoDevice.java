@@ -31,6 +31,12 @@ public class TadoDevice
     private String              batteryState;
     /**  */
     private List<String>        duties;
+    
+    /** Indicates whether the device is registerd to a home. API v1 only */
+    private Boolean             registeredToHome;
+    
+    /** Indicates whether the device is connected API v1 only*/
+    private Boolean             connected;
 
     public String getDeviceType()
     {
@@ -122,5 +128,23 @@ public class TadoDevice
         this.duties = duties;
     }
 
-    
+    public Boolean getRegisteredToHome()
+    {
+        return registeredToHome;
+    }
+
+    public void setRegisteredToHome(Boolean registeredToHome)
+    {
+        this.registeredToHome = registeredToHome;
+    }
+
+    public Boolean getConnected()
+    {
+        return connected;
+    }
+
+    public void setConnected(Boolean connected)
+    {
+        this.connected = connected;
+    }
 }

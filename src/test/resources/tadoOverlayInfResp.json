@@ -1,0 +1,16 @@
+{
+  "type": "MANUAL",
+  "setting": {
+    "type": "HEATING",
+    "power": "ON",
+    "temperature": {
+      "celsius": 17,
+      "fahrenheit": 62.6
+    }
+  },
+  "termination": {
+    "type": "MANUAL",
+    "typeSkillBasedApp": "MANUAL",
+    "projectedExpiry": null
+  }
+}

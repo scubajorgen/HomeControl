@@ -7,9 +7,11 @@ package net.studioblueplanet.homecontrol.tado;
 
 import java.util.List;
 
+import net.studioblueplanet.homecontrol.tado.entities.TadoDevice;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
-import net.studioblueplanet.homecontrol.tado.entities.TadoPresence.TadoHomePresence;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
+import net.studioblueplanet.homecontrol.tado.entities.TadoOverlay;
+import net.studioblueplanet.homecontrol.tado.entities.TadoPresence.TadoHomePresence;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
@@ -33,9 +35,14 @@ public interface TadoInterface
     public TadoToken        authenticate(String username, String password);
     
     /**
-     * Destroys the token and stops the refresh process
+     * Signout logged in user. Remove logged in account.
      */
     public void             signOut();
+    
+    /**
+     * Remove all traced accounts.
+     */
+    public void             reset();
     
     /**
      * Requests information on the account
@@ -77,4 +84,34 @@ public interface TadoInterface
      * @param presence The presence
      */
     public void             setTadoPresence(int homeId, TadoHomePresence presence);
+    
+    /**
+     * Return the current overlay of the zone
+     * @param homeId Home ID
+     * @param zoneId Zone ID
+     * @return The overlay if present or 404
+     */
+    public TadoOverlay      tadoOverlay(int homeId, int zoneId);
+    
+    /**
+     * Set an overlay to the zone, defining parameters overruling the schedule
+     * @param homeId Home ID
+     * @param zoneId Zone ID
+     * @param overlay The overlay defining the overruling of the schedule
+     */
+    public void             setTadoOverlay(int homeId, int zoneId, TadoOverlay overlay);
+    
+    /**
+     * Delete the overlay, resume schedule
+     * @param homeId Home ID
+     * @param zoneId Zone ID
+     */
+    public void             deleteTadoOverlay(int homeId, int zoneId);
+    
+    /**
+     * List all Tado devices registered to the home. Uses V1 of Tado API
+     * @param homeId Home ID
+     * @return List of devices
+     */
+    public List<TadoDevice> tadoDevices(int homeId);
 }

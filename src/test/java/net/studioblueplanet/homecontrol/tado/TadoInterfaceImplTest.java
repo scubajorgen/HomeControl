@@ -8,6 +8,7 @@ package net.studioblueplanet.homecontrol.tado;
 import java.util.List;
 import java.net.URI;
 import java.text.SimpleDateFormat;
+import net.studioblueplanet.homecontrol.tado.entities.TadoDevice;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence.TadoHomePresence;
@@ -108,21 +109,6 @@ public class TadoInterfaceImplTest
     }
 
     /**
-     * Test of run method, of class TadoInterfaceImpl.
-     */
-    /**
-    @Test
-    public void testRun()
-    {
-        System.out.println("run");
-        TadoInterfaceImpl instance = new TadoInterfaceImpl();
-        instance.run();
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-    */
-
-    /**
      * Test of authenticate method, of class TadoInterfaceImpl.
      */
     @Test
@@ -131,19 +117,54 @@ public class TadoInterfaceImplTest
         System.out.println("authenticate");
 
         TadoToken result;
+        tadoInterface.reset();
         result=authenticate();
         assertEquals("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MjljYjBlNS00MTg0LTQ3YjktYjFhMS1jN2Y4MjZkOTlkNjkiLCJ0YWRvX2hvbWVzIjpbeyJpZCI6NjMxMzE0fV0sImlzcyI6InRhZG8iLCJsb2NhbGUiOiJlbiIsImF1ZCI6InBhcnRuZXIiLCJuYmYiOjE2MTIyMDAzMjEsInRhZG9fc2NvcGUiOlsiaG9tZS51c2VyIl0sInRhZG9fdXNlcm5hbWUiOiJzY3ViYWpvcmdlbkBnbWFpbC5jb20iLCJuYW1lIjoiSm9yZ2VuIHZhbiBkZXIgVmVsZGUiLCJleHAiOjE2MTIyMDA5MjEsImlhdCI6MTYxMjIwMDMyMSwidGFkb19jbGllbnRfaWQiOiJ0YWRvLXdlYi1hcHAiLCJqdGkiOiJmZjIyNTcxZC1kMmU1LTQ1NTgtOWRlMi04NzI2ZjljZTc3ZDciLCJlbWFpbCI6InNjdWJham9yZ2VuQGdtYWlsLmNvbSJ9.k3Ug6k6h4LGQiXUIGAoAAfEEpOKlCJho0sMQY7Ed-cZu87rcQVrbtnVkDDEzGRWyRIrhhuxEzlN9_NKzs9qHFMvi0smMB--OYOZzLQyB4zGerkpvZ0WnJyxjqizFvtqFbYqG_5JMTES-QY8b5KQWioLKJZx8CBQlFIuM2EhXqRp2DE5iL-aBKvaGU8YS8VPdA1dmicO1TZd0fLKMU7TwyErdecVYfNVoENRdZOVjv_9b-IzlEh-NjaP5hOYJl0XEObVCydYdg-Jpwt_75iWtfD154qg0_k0UtDyJ7hOxwLMLx7Z2hZ_8stM58RtxpYWJYc8nIhmo2RNvEcxK8FMbHw", result.getAccess_token());
         mockServer.verify();
         
         // On second authenticate we don't expect a call to the server
         mockServer.reset();
-        mockServer.expect(ExpectedCount.never(), 
-          requestTo(new URI("https://auth.tado.com/oauth/token")));        
+        mockServer.expect(ExpectedCount.never(), requestTo(new URI("https://auth.tado.com/oauth/token")));        
         result = tadoInterface.authenticate("name", "noonewillguessthis");
         assertEquals("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MjljYjBlNS00MTg0LTQ3YjktYjFhMS1jN2Y4MjZkOTlkNjkiLCJ0YWRvX2hvbWVzIjpbeyJpZCI6NjMxMzE0fV0sImlzcyI6InRhZG8iLCJsb2NhbGUiOiJlbiIsImF1ZCI6InBhcnRuZXIiLCJuYmYiOjE2MTIyMDAzMjEsInRhZG9fc2NvcGUiOlsiaG9tZS51c2VyIl0sInRhZG9fdXNlcm5hbWUiOiJzY3ViYWpvcmdlbkBnbWFpbC5jb20iLCJuYW1lIjoiSm9yZ2VuIHZhbiBkZXIgVmVsZGUiLCJleHAiOjE2MTIyMDA5MjEsImlhdCI6MTYxMjIwMDMyMSwidGFkb19jbGllbnRfaWQiOiJ0YWRvLXdlYi1hcHAiLCJqdGkiOiJmZjIyNTcxZC1kMmU1LTQ1NTgtOWRlMi04NzI2ZjljZTc3ZDciLCJlbWFpbCI6InNjdWJham9yZ2VuQGdtYWlsLmNvbSJ9.k3Ug6k6h4LGQiXUIGAoAAfEEpOKlCJho0sMQY7Ed-cZu87rcQVrbtnVkDDEzGRWyRIrhhuxEzlN9_NKzs9qHFMvi0smMB--OYOZzLQyB4zGerkpvZ0WnJyxjqizFvtqFbYqG_5JMTES-QY8b5KQWioLKJZx8CBQlFIuM2EhXqRp2DE5iL-aBKvaGU8YS8VPdA1dmicO1TZd0fLKMU7TwyErdecVYfNVoENRdZOVjv_9b-IzlEh-NjaP5hOYJl0XEObVCydYdg-Jpwt_75iWtfD154qg0_k0UtDyJ7hOxwLMLx7Z2hZ_8stM58RtxpYWJYc8nIhmo2RNvEcxK8FMbHw", result.getAccess_token());
         mockServer.verify();
     }
 
+    /**
+     * Test of authenticate method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testAuthenticateInvalidCredentials() throws Exception
+    {
+        System.out.println("authenticate - invalid credentials");
+
+        TadoToken result;
+
+        
+        // On second authenticate we don't expect a call to the server
+        mockServer.reset();
+    
+        String username = "name";
+        String password = "noonewillguessthis";
+        String expectedRequestBody="client_id=tado-web-app&scope=home.user&"+
+                                   "grant_type=password&username="+username+"&password="+password+"&"+
+                                   "client_secret=wZaRN7rpjn3FoNyF5IFuxg9uMzYJcvOoQ8QWiIqS3hfk6gLhVlG57j5YNoZL2Rtc";
+
+        String body = new String(Files.readAllBytes((new File("src/test/resources/tadoToken.json")).toPath()));        
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://auth.tado.com/oauth/token")))
+          .andExpect(method(HttpMethod.POST))
+          .andExpect(content().string(expectedRequestBody))
+          .andRespond(withStatus(HttpStatus.BAD_REQUEST)        // invalid credentials results in BAD REQUEST
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(body)
+        );        
+        tadoInterface.reset();
+        result = tadoInterface.authenticate(username, password);
+        assertNull(result);
+        mockServer.verify();
+    }
+    
     /**
      * Test of signOut method, of class TadoInterfaceImpl.
      */
@@ -202,6 +223,38 @@ public class TadoInterfaceImplTest
         assertEquals("8.0.0", result.getMobileDevices().get(0).getDeviceMetadata().getOsVersion());
         assertEquals("Samsung_SM-G930F", result.getMobileDevices().get(0).getDeviceMetadata().getModel());
         assertEquals("en", result.getMobileDevices().get(0).getDeviceMetadata().getLocale());
+        
+        mockServer.verify();
+    }
+
+    /**
+     * Test of tadoMe method, of class TadoInterfaceImpl.
+     */
+
+    @Test
+    public void testTadoMeUnauthorized() throws Exception
+    {
+        System.out.println("tadoMe unauthorized");
+        authenticate();
+
+        mockServer.reset();
+        String body = new String(Files.readAllBytes((new File("src/test/resources/tadoMe.json")).toPath()));
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/me/")))
+          .andExpect(method(HttpMethod.GET))
+          .andRespond(withStatus(HttpStatus.UNAUTHORIZED)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(body)
+        );                             
+        String authBody = new String(Files.readAllBytes((new File("src/test/resources/tadoToken.json")).toPath()));
+        mockServer.expect(ExpectedCount.once(), 
+                requestTo(new URI("https://auth.tado.com/oauth/token")))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withStatus(HttpStatus.OK)          
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(authBody));      
+        TadoMe result = tadoInterface.tadoMe();
+        assertNull(result);
         
         mockServer.verify();
     }
@@ -460,4 +513,37 @@ public class TadoInterfaceImplTest
         tadoInterface.setTadoPresence(123456, TadoHomePresence.HOME);
         mockServer.verify();
     }
+    
+    /**
+     * Test of tadoZones method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testTadoDevices() throws Exception
+    {
+        System.out.println("tadoDevices");
+        authenticate();
+
+        mockServer.reset();
+        String body = new String(Files.readAllBytes((new File("src/test/resources/tadoDevices.json")).toPath()));
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v1/home/123456/devices")))
+          .andExpect(method(HttpMethod.GET))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(body)
+        );                                   
+            
+        List<TadoDevice> result = tadoInterface.tadoDevices(123456);
+
+        assertEquals(6, result.size());
+        assertEquals("IB01", result.get(0).getDeviceType());
+        assertEquals("RU3912770304", result.get(1).getSerialNo());
+        assertEquals("RU3912770304", result.get(1).getShortSerialNo());
+        assertEquals(true, result.get(1).getConnected());
+        assertEquals(true, result.get(2).getConnectionState().isValue());
+        assertEquals("2021-02-17 15:48:07", dateFormat.format(result.get(2).getConnectionState().getTimestamp()));
+        assertEquals(true, result.get(5).getRegisteredToHome());
+        mockServer.verify();
+    }
+    
 }
