@@ -5,9 +5,12 @@
  */
 package net.studioblueplanet.homecontrol.service;
 
+import java.util.List;
+
 import net.studioblueplanet.homecontrol.service.entities.Account;
 import net.studioblueplanet.homecontrol.service.entities.Home;
 import net.studioblueplanet.homecontrol.service.entities.HomeState;
+import net.studioblueplanet.homecontrol.service.entities.Zone;
 
 /**
  *
@@ -15,9 +18,11 @@ import net.studioblueplanet.homecontrol.service.entities.HomeState;
  */
 public interface HomeService
 {
-    public Home getHome(int homeId);
+    public Home         getHome(int homeId);
     
-    public HomeState getHomeState(int homeId);
+    public HomeState    getHomeState(int homeId);
     
-    public void setPresence(int homeId, String presence);
+    public void         setPresence(int homeId, String presence);
+    
+    public List<Zone>   getZones(int homeId);
 }

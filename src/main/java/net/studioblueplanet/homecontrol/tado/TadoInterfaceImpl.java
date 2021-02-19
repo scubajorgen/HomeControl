@@ -5,6 +5,11 @@
  */
 package net.studioblueplanet.homecontrol.tado;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+//import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+//import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -19,7 +24,10 @@ import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
 import net.studioblueplanet.homecontrol.tado.entities.TadoOverlay;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence;
+import net.studioblueplanet.homecontrol.tado.entities.TadoSetting;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
+import net.studioblueplanet.homecontrol.tado.entities.TadoTemperature;
+import net.studioblueplanet.homecontrol.tado.entities.TadoTermination;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZoneState;
@@ -335,16 +343,69 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     }
     
     @Override
-    public void setTadoOverlay(int homeId, int zoneId, TadoOverlay overlay)
+    public TadoOverlay setTadoOverlay(int homeId, int zoneId, TadoOverlay overlay)
     {
         LOG.info("Set Tado OVERLAY for user {}, home {}, zone {}", loggedInAccount.getUsername(), homeId, zoneId);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(loggedInAccount.getToken().getAccess_token());
         HttpEntity<TadoOverlay> entity = new HttpEntity<>(overlay, headers);
-        ResponseEntity<String> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/zone/"+zoneId, 
-                                                            HttpMethod.PUT, entity, String.class);             
+        ResponseEntity<TadoOverlay> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/zones/"+zoneId+"/overlay", 
+                                                            HttpMethod.PUT, entity, TadoOverlay.class); 
+        
+        return response.getBody();
     }
     
+    public TadoOverlay setTadoOverlay(int homeId, int zoneId, ZoneType type, State state, double temperature, Termination termination, int timerSeconds)
+    {
+        LOG.info("Set Tado OVERLAY for user {}, home {}, zone {}", loggedInAccount.getUsername(), homeId, zoneId);
+
+        TadoTemperature temp=new TadoTemperature();
+        temp.setCelsius(temperature);
+        temp.setFahrenheit((temperature * 9.0/5.0) + 32.0);
+        TadoSetting setting=new TadoSetting();
+        switch (state)
+        {
+            case OFF:
+                setting.setPower("OFF");
+                break;
+            case ON:
+                setting.setPower("ON");
+                setting.setTemperature(temp);
+                break;
+        }
+        switch (type)
+        {
+            case HEATING:
+                setting.setType("HEATING");
+                break;
+            case HOTWATER:
+                setting.setType("HOT_WATER");
+                break;
+        }
+        TadoTermination term=new TadoTermination();
+        TadoOverlay overlay=new TadoOverlay();
+        switch(termination)
+        {
+            case TIMER:
+                term.setTypeSkillBasedApp("TIMER");
+                term.setDurationInSeconds(timerSeconds);
+                break;
+            case NEXTTIMEBLOCK:
+                term.setTypeSkillBasedApp("NEXT_TIME_BLOCK");
+                break;
+            case INFINITE:
+                term.setTypeSkillBasedApp("MANUAL");
+                overlay.setType("MANUAL");
+                break;
+        }
+        overlay.setSetting(setting);
+        overlay.setTermination(term);
+        
+        TadoOverlay response=setTadoOverlay(homeId, zoneId, overlay);
+        return response;
+    }
+
+
     @Override
     public void deleteTadoOverlay(int homeId, int zoneId)
     {

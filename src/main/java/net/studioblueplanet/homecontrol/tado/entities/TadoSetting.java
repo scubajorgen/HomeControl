@@ -12,14 +12,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * @author jorgen
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class TadoOverlay
+public class TadoSetting
 {
-    /** Type of the overlay */
-    private String              type;
-    /** Setting to overrule */
-    private TadoSetting         setting;
-    /** Termination of the overlay */
-    private TadoTermination     termination;
+    /** Type: HEATING */
+    private String type;
+    /** Power ON or OFF */
+    private String power;
+    /** Temperature setting */
+    private TadoTemperature temperature;
 
     public String getType()
     {
@@ -31,23 +31,23 @@ public class TadoOverlay
         this.type = type;
     }
 
-    public TadoSetting getSetting()
+    public String getPower()
     {
-        return setting;
+        return power;
     }
 
-    public void setSetting(TadoSetting setting)
+    public void setPower(String power)
     {
-        this.setting = setting;
+        this.power = power;
     }
 
-    public TadoTermination getTermination()
+    public TadoTemperature getTemperature()
     {
-        return termination;
+        return temperature;
     }
 
-    public void setTermination(TadoTermination termination)
+    public void setTemperature(TadoTemperature temperature)
     {
-        this.termination = termination;
+        this.temperature = temperature;
     }
 }

@@ -1,0 +1,9 @@
+{
+  "setting": {
+    "type": "HOT_WATER",
+    "power": "OFF"
+  },
+  "termination": {
+    "typeSkillBasedApp": "NEXT_TIME_BLOCK"
+  }
+}

@@ -23,6 +23,25 @@ import net.studioblueplanet.homecontrol.tado.entities.TadoZoneState;
  */
 public interface TadoInterface
 {
+    public enum Termination
+    {
+        TIMER,
+        NEXTTIMEBLOCK,
+        INFINITE
+    }
+    
+    public enum ZoneType
+    {
+        HEATING,
+        HOTWATER
+    }
+    
+    public enum State
+    {
+        ON,
+        OFF
+    }
+
     /**
      * This method authenticates the user based on his/her credentials.
      * An initial access token is acquired. It is periodically refreshed in 
@@ -98,8 +117,20 @@ public interface TadoInterface
      * @param homeId Home ID
      * @param zoneId Zone ID
      * @param overlay The overlay defining the overruling of the schedule
+     * @return The overlay as obtained as response from Tado
      */
-    public void             setTadoOverlay(int homeId, int zoneId, TadoOverlay overlay);
+    public TadoOverlay      setTadoOverlay(int homeId, int zoneId, TadoOverlay overlay);
+
+    /**
+     * 
+     * @param homeId
+     * @param zoneId
+     * @param temperature
+     * @param termination
+     * @param timerSeconds 
+     * @return The overlay as obtained as response from Tado
+     */
+    public TadoOverlay      setTadoOverlay(int homeId, int zoneId, ZoneType type, State state, double temperature, Termination termination, int timerSeconds);
     
     /**
      * Delete the overlay, resume schedule

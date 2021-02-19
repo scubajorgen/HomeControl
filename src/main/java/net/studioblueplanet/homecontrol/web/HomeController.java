@@ -5,6 +5,7 @@
  */
 package net.studioblueplanet.homecontrol.web;
 
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +18,7 @@ import net.studioblueplanet.homecontrol.service.HomeService;
 import net.studioblueplanet.homecontrol.service.entities.Account;
 import net.studioblueplanet.homecontrol.service.entities.Home;
 import net.studioblueplanet.homecontrol.service.entities.HomeState;
+import net.studioblueplanet.homecontrol.service.entities.Zone;
 
 import org.springframework.http.HttpStatus;
 
@@ -114,4 +116,24 @@ public class HomeController
         }    
         return homeResponse;
     }
+    
+    @RequestMapping("/zones")
+    public ResponseEntity<List<Zone>> zones() 
+    {
+        ResponseEntity<List<Zone>>  zonesResponse;
+        List<Zone>                  zones;
+
+        Account account=accountService.getAccount();
+        if (account!=null)
+        {
+            zones=homeService.getZones(account.getHomes().get(0).getId());
+            zonesResponse=ResponseEntity.ok(zones);
+        }
+        else
+        {
+            zonesResponse=ResponseEntity.notFound().build();
+        }    
+        return zonesResponse;
+    }
+    
 }

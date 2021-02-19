@@ -1,7 +1,7 @@
 {
   "setting": {
-    "power": "ON",
     "type": "HEATING",
+    "power": "ON",
     "temperature": {
       "celsius": 25,
       "fahrenheit": 77

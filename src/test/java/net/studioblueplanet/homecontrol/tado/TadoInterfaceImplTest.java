@@ -11,11 +11,15 @@ import java.text.SimpleDateFormat;
 import net.studioblueplanet.homecontrol.tado.entities.TadoDevice;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
+import net.studioblueplanet.homecontrol.tado.entities.TadoOverlay;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence.TadoHomePresence;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZoneState;
+import net.studioblueplanet.homecontrol.tado.TadoInterface.State;
+import net.studioblueplanet.homecontrol.tado.TadoInterface.Termination;
+import net.studioblueplanet.homecontrol.tado.TadoInterface.ZoneType;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -546,4 +550,188 @@ public class TadoInterfaceImplTest
         mockServer.verify();
     }
     
+    /**
+     * Test of setTadoOverlay method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testSetTadoOverlayBoost() throws Exception
+    {
+        System.out.println("setTadoOverlay - Boost");
+        authenticate();
+
+        mockServer.reset();
+        String expectedRequestBody = new String(Files.readAllBytes((new File("src/test/resources/tadoOverlayBoostReq.json")).toPath()));
+        String responseBody = new String(Files.readAllBytes((new File("src/test/resources/tadoOverlayBoostResp.json")).toPath()));
+        
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/zones/1/overlay")))
+          .andExpect(method(HttpMethod.PUT))
+          .andExpect(content().string(expectedRequestBody.replaceAll("\\s", "")))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(responseBody)
+        );          
+        
+        TadoOverlay response=tadoInterface.setTadoOverlay(123456, 1, ZoneType.HEATING, State.ON, 25.0, Termination.TIMER, 1800);
+        
+        assertEquals("MANUAL", response.getType());
+        assertEquals("HEATING", response.getSetting().getType());
+        assertEquals("ON", response.getSetting().getPower());
+        assertEquals(25.0, response.getSetting().getTemperature().getCelsius(), 0.0001);
+        assertEquals(77.0, response.getSetting().getTemperature().getFahrenheit(), 0.0001);
+        assertEquals("TIMER", response.getTermination().getType());
+        assertEquals("TIMER", response.getTermination().getTypeSkillBasedApp());
+        assertEquals(1800, response.getTermination().getDurationInSeconds().intValue());
+        assertEquals(1799, response.getTermination().getRemainingTimeInSeconds().intValue());
+        assertEquals("2021-02-15 07:52:14", dateFormat.format(response.getTermination().getExpiry()));
+        assertEquals("2021-02-15 07:52:14", dateFormat.format(response.getTermination().getProjectedExpiry()));
+    }
+
+    /**
+     * Test of setTadoOverlay method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testSetTadoOverlayInfinity() throws Exception
+    {
+        System.out.println("setTadoOverlay - Infinity");
+        authenticate();
+
+        mockServer.reset();
+        String expectedRequestBody = new String(Files.readAllBytes((new File("src/test/resources/tadoOverlayInfReq.json")).toPath()));
+        String responseBody = new String(Files.readAllBytes((new File("src/test/resources/tadoOverlayInfResp.json")).toPath()));
+        
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/zones/1/overlay")))
+          .andExpect(method(HttpMethod.PUT))
+          .andExpect(content().string(expectedRequestBody.replaceAll("\\s", "")))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(responseBody)
+        );          
+        
+        TadoOverlay response=tadoInterface.setTadoOverlay(123456, 1, ZoneType.HEATING, State.ON, 17.0, TadoInterface.Termination.INFINITE, 0);
+        
+        assertEquals("MANUAL", response.getType());
+        assertEquals("HEATING", response.getSetting().getType());
+        assertEquals("ON", response.getSetting().getPower());
+        assertEquals(17.0, response.getSetting().getTemperature().getCelsius(), 0.0001);
+        assertEquals(62.6   , response.getSetting().getTemperature().getFahrenheit(), 0.0001);
+        assertEquals("MANUAL", response.getTermination().getType());
+        assertEquals("MANUAL", response.getTermination().getTypeSkillBasedApp());
+        assertNull(response.getTermination().getDurationInSeconds());
+        assertNull(response.getTermination().getRemainingTimeInSeconds());
+        assertNull(response.getTermination().getExpiry());
+        assertNull(response.getTermination().getProjectedExpiry());
+    }
+
+    /**
+     * Test of setTadoOverlay method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testSetTadoOverlayNextTimeBlock() throws Exception
+    {
+        System.out.println("setTadoOverlay - Next Time Block");
+        authenticate();
+
+        mockServer.reset();
+        String expectedRequestBody = new String(Files.readAllBytes((new File("src/test/resources/tadoOverlayNextReq.json")).toPath()));
+        String responseBody = new String(Files.readAllBytes((new File("src/test/resources/tadoOverlayNextResp.json")).toPath()));
+        
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/zones/1/overlay")))
+          .andExpect(method(HttpMethod.PUT))
+          .andExpect(content().string(expectedRequestBody.replaceAll("\\s", "")))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(responseBody)
+        );          
+        
+        TadoOverlay response=tadoInterface.setTadoOverlay(123456, 1, ZoneType.HEATING, State.ON, 16.0, TadoInterface.Termination.NEXTTIMEBLOCK, 1800);
+        
+        assertEquals("MANUAL", response.getType());
+        assertEquals("HEATING", response.getSetting().getType());
+        assertEquals("ON", response.getSetting().getPower());
+        assertEquals(16.0, response.getSetting().getTemperature().getCelsius(), 0.0001);
+        assertEquals(60.8, response.getSetting().getTemperature().getFahrenheit(), 0.0001);
+        assertEquals("TIMER", response.getTermination().getType());
+        assertEquals("NEXT_TIME_BLOCK", response.getTermination().getTypeSkillBasedApp());
+        assertEquals(1800, response.getTermination().getDurationInSeconds().intValue());
+        assertEquals(30408, response.getTermination().getRemainingTimeInSeconds().intValue());
+        assertEquals("2021-02-15 16:00:00", dateFormat.format(response.getTermination().getExpiry()));
+        assertEquals("2021-02-15 16:00:00", dateFormat.format(response.getTermination().getProjectedExpiry()));
+    }    
+
+    /**
+     * Test of setTadoOverlay method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testSetTadoOverlayHotWaterNextTimeBlock() throws Exception
+    {
+        System.out.println("setTadoOverlay - Next Time Block - Hot water off");
+        authenticate();
+
+        mockServer.reset();
+        String expectedRequestBody = new String(Files.readAllBytes((new File("src/test/resources/tadoOverlayHwNextReq.json")).toPath()));
+        String responseBody = new String(Files.readAllBytes((new File("src/test/resources/tadoOverlayHwNextResp.json")).toPath()));
+        
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/zones/2/overlay")))
+          .andExpect(method(HttpMethod.PUT))
+          .andExpect(content().string(expectedRequestBody.replaceAll("\\s", "")))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(responseBody)
+        );          
+        
+        TadoOverlay response=tadoInterface.setTadoOverlay(123456, 2, ZoneType.HOTWATER, State.OFF, 0, TadoInterface.Termination.NEXTTIMEBLOCK, 0);
+        
+        assertEquals("MANUAL", response.getType());
+        assertEquals("HOT_WATER", response.getSetting().getType());
+        assertEquals("OFF", response.getSetting().getPower());
+        assertNull(response.getSetting().getTemperature());
+        assertEquals("TIMER", response.getTermination().getType());
+        assertEquals("NEXT_TIME_BLOCK", response.getTermination().getTypeSkillBasedApp());
+        assertEquals(1800, response.getTermination().getDurationInSeconds().intValue());
+        assertEquals(2687, response.getTermination().getRemainingTimeInSeconds().intValue());
+        assertEquals("2021-02-18 21:00:00", dateFormat.format(response.getTermination().getExpiry()));
+        assertEquals("2021-02-18 21:00:00", dateFormat.format(response.getTermination().getProjectedExpiry()));
+    }
+
+    /**
+     * Test of setTadoOverlay method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testSetTadoOverlayHotWaterInfiniteTimeBlock() throws Exception
+    {
+        System.out.println("setTadoOverlay - Inf - Hot water off");
+        authenticate();
+
+        mockServer.reset();
+        String expectedRequestBody = new String(Files.readAllBytes((new File("src/test/resources/tadoOverlayHwInfReq.json")).toPath()));
+        String responseBody = new String(Files.readAllBytes((new File("src/test/resources/tadoOverlayHwInfResp.json")).toPath()));
+        
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/zones/2/overlay")))
+          .andExpect(method(HttpMethod.PUT))
+          .andExpect(content().string(expectedRequestBody.replaceAll("\\s", "")))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(responseBody)
+        );          
+        
+        TadoOverlay response=tadoInterface.setTadoOverlay(123456, 2, ZoneType.HOTWATER, State.ON, 50.0, TadoInterface.Termination.INFINITE, 0);
+        
+        assertEquals("MANUAL", response.getType());
+        assertEquals("HOT_WATER", response.getSetting().getType());
+        assertEquals("ON", response.getSetting().getPower());
+        assertEquals(50.0, response.getSetting().getTemperature().getCelsius(), 0.0001);
+        assertEquals(122.0, response.getSetting().getTemperature().getFahrenheit(), 0.0001);
+        assertEquals("MANUAL", response.getTermination().getType());
+        assertEquals("MANUAL", response.getTermination().getTypeSkillBasedApp());
+        assertNull(response.getTermination().getDurationInSeconds());
+        assertNull(response.getTermination().getRemainingTimeInSeconds());
+        assertNull(response.getTermination().getExpiry());
+        assertNull(response.getTermination().getProjectedExpiry());
+    }
+
 }

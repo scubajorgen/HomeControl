@@ -18,7 +18,7 @@ public class TadoZoneState
     private Object                  preparation;
     private TadoZoneSetting         setting;
     private String                  overlayType;
-    private Object                  overlay;
+    private TadoOverlay             overlay;
     private Object                  openWindow;
     private boolean                 openWindowDetected;
     private TadoScheduleChange      nextScheduleChange;
@@ -87,12 +87,12 @@ public class TadoZoneState
         this.overlayType = overlayType;
     }
 
-    public Object getOverlay()
+    public TadoOverlay getOverlay()
     {
         return overlay;
     }
 
-    public void setOverlay(Object overlay)
+    public void setOverlay(TadoOverlay overlay)
     {
         this.overlay = overlay;
     }

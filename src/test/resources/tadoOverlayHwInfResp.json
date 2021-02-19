@@ -1,0 +1,16 @@
+{
+  "type": "MANUAL",
+  "setting": {
+    "type": "HOT_WATER",
+    "power": "ON",
+    "temperature": {
+      "celsius": 50,
+      "fahrenheit": 122
+    }
+  },
+  "termination": {
+    "type": "MANUAL",
+    "typeSkillBasedApp": "MANUAL",
+    "projectedExpiry": null
+  }
+}

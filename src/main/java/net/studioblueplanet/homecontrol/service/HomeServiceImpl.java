@@ -5,15 +5,20 @@
  */
 package net.studioblueplanet.homecontrol.service;
 
+import java.util.List;
+import java.util.Iterator;
 import javax.annotation.PostConstruct;
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
 import net.studioblueplanet.homecontrol.service.entities.Account;
 import net.studioblueplanet.homecontrol.service.entities.Home;
 import net.studioblueplanet.homecontrol.service.entities.HomeState;
+import net.studioblueplanet.homecontrol.service.entities.Zone;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence.TadoHomePresence;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
+import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
+import net.studioblueplanet.homecontrol.tado.entities.TadoZoneState;
 import net.studioblueplanet.homecontrol.tado.TadoInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -66,6 +71,18 @@ public class HomeServiceImpl implements HomeService
                 .byDefault()
                 .register();
 
+        mapperFactory.classMap(TadoZone.class, Zone.class)
+                .byDefault()
+                .register();
+
+        mapperFactory.classMap(TadoZoneState.class, Zone.class)
+                .byDefault()
+                .field("setting.temperature.celsius", "temperatureSetpoint")
+                .field("setting.power", "power")
+                .field("sensorDataPoints.insideTemperature.celsius", "temperature")
+                .field("sensorDataPoints.humidity.percentage", "humidity")
+                .register();
+
         mappingRegistered=true;
     }
     
@@ -107,5 +124,31 @@ public class HomeServiceImpl implements HomeService
         {
             tado.setTadoPresence(homeId, TadoHomePresence.HOME);
         }
+    }
+    
+    @Override
+    public List<Zone>   getZones(int homeId)
+    {
+        List<TadoZone>  tadoZones;
+        List<Zone>      zones;
+        Iterator<Zone>  it;
+        Zone            zone;
+        TadoZoneState   state;        
+        
+        tadoZones=tado.tadoZones(homeId);
+        
+        
+        MapperFacade mapper = mapperFactory.getMapperFacade();
+        zones=mapper.mapAsList(tadoZones, Zone.class);
+        
+        it=zones.iterator();
+        while (it.hasNext())
+        {
+            zone    =it.next();
+            state   =tado.tadoZoneState(homeId, zone.getId());
+            mapper.map(state, zone);
+        }
+        
+        return zones;
     }
 }

@@ -5,6 +5,9 @@
  */
 package net.studioblueplanet.homecontrol.tado.entities;
 
+import net.studioblueplanet.homecontrol.tado.DoubleSerializer;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 /**
  *
  * @author jorgen
@@ -12,8 +15,10 @@ package net.studioblueplanet.homecontrol.tado.entities;
 public class TadoTemperature
 {
     /** Temperature in degree Celcius */
+    @JsonSerialize(using = DoubleSerializer.class)
     private double celsius;
     /** Temperature in degree Fahrenheit */
+    @JsonSerialize(using = DoubleSerializer.class)
     private double fahrenheit;
 
     public double getCelsius()
