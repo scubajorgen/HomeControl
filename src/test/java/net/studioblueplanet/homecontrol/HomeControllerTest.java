@@ -153,7 +153,7 @@ public class HomeControllerTest
         state.setShowHomePresenceSwitchButton(true);
         Mockito.when(this.homeService.getHomeState(homeId)).thenReturn(state);
         
-        mvc.perform(MockMvcRequestBuilders.get("/api/state").accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.get("/api/state/"+homeId).accept(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.presence").value("AWAY"))
         .andExpect(jsonPath("$.presenceLocked").value(false))
         .andExpect(jsonPath("$.showHomePresenceSwitchButton").value(true))

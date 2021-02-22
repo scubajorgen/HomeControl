@@ -21,6 +21,7 @@ public class Zone
     private String                  power;
     private Double                  temperatureSetpoint;
     private Double                  temperature;
+    private Double                  temperaturePrecision;
     private Double                  humidity;
     
     public int getId()
@@ -91,6 +92,16 @@ public class Zone
     public void setTemperature(Double temperature)
     {
         this.temperature = temperature;
+    }
+
+    public Double getTemperaturePrecision()
+    {
+        return temperaturePrecision;
+    }
+
+    public void setTemperaturePrecision(Double temperaturePrecision)
+    {
+        this.temperaturePrecision = temperaturePrecision;
     }
 
     public Double getHumidity()

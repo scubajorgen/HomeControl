@@ -5,6 +5,7 @@
  */
 package net.studioblueplanet.homecontrol.service;
 
+import java.util.List;
 import javax.annotation.PostConstruct;
 import ma.glasnost.orika.MapperFactory;
 import ma.glasnost.orika.MapperFacade;
@@ -24,12 +25,12 @@ import org.springframework.stereotype.Component;
 public class AccountServiceImpl implements AccountService
 {
     @Autowired
-    private TadoInterface tado;
+    private TadoInterface   tado;
     
     @Autowired
-    private MapperFactory mapperFactory;
+    private MapperFactory   mapperFactory;
     
-    private Account account;
+    private Account         account;
     
     @PostConstruct
     public void init()
@@ -73,6 +74,7 @@ public class AccountServiceImpl implements AccountService
         {
             account=null;
         }
+        // TODO: add friend account usernames from persistency
     }
     
     @Override
@@ -84,4 +86,25 @@ public class AccountServiceImpl implements AccountService
         }
         return account;
     }
+    
+    @Override
+    public void setFriendAccount(String friendAccountUsername)
+    {
+        if (account==null)
+        {
+            retrieveAccountFromTado();
+        }
+        account.addFriendAccountUsername(friendAccountUsername);
+        // TODO: persist friend account usernames
+    }
+    
+    @Override
+    public List<String> getFriendAccountUsernames()
+    {
+        if (account==null)
+        {
+            retrieveAccountFromTado();
+        }
+        return account.getFriendAccountUsernames();
+    }    
 }

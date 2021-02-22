@@ -5,6 +5,7 @@
  */
 package net.studioblueplanet.homecontrol.service;
 
+import java.util.List;
 import net.studioblueplanet.homecontrol.service.entities.Account;
 
 /**
@@ -17,5 +18,9 @@ public interface AccountService
      * Get the account information.
      * @return Account information
      */
-    public Account getAccount();
+    public Account          getAccount();
+    
+    public void             setFriendAccount(String friendAccountUsername);
+    
+    public List<String>     getFriendAccountUsernames();
 }

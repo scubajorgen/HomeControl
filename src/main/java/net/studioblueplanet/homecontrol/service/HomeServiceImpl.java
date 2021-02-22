@@ -13,6 +13,7 @@ import ma.glasnost.orika.MapperFactory;
 import net.studioblueplanet.homecontrol.service.entities.Account;
 import net.studioblueplanet.homecontrol.service.entities.Home;
 import net.studioblueplanet.homecontrol.service.entities.HomeState;
+import net.studioblueplanet.homecontrol.service.entities.Overlay;
 import net.studioblueplanet.homecontrol.service.entities.Zone;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence.TadoHomePresence;
@@ -80,6 +81,7 @@ public class HomeServiceImpl implements HomeService
                 .field("setting.temperature.celsius", "temperatureSetpoint")
                 .field("setting.power", "power")
                 .field("sensorDataPoints.insideTemperature.celsius", "temperature")
+                .field("sensorDataPoints.insideTemperature.precision.celsius", "temperaturePrecision")
                 .field("sensorDataPoints.humidity.percentage", "humidity")
                 .register();
 
@@ -150,5 +152,13 @@ public class HomeServiceImpl implements HomeService
         }
         
         return zones;
+    }
+    
+    public void setOverlay(Overlay overlay)
+    {
+        int homeId=overlay.getHomeId();
+        int zoneId=overlay.getZoneId();
+        
+//        tado.setTadoOverlay(overlay.getHomeId(), overlay.getZoneId(), TadoInterface.ZoneType.HEATING, overlay.getPower(), 0, TadoInterface.Termination.INFINITE, 0);
     }
 }

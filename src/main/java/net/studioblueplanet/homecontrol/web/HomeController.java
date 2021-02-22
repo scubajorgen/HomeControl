@@ -8,6 +8,7 @@ package net.studioblueplanet.homecontrol.web;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +19,7 @@ import net.studioblueplanet.homecontrol.service.HomeService;
 import net.studioblueplanet.homecontrol.service.entities.Account;
 import net.studioblueplanet.homecontrol.service.entities.Home;
 import net.studioblueplanet.homecontrol.service.entities.HomeState;
+import net.studioblueplanet.homecontrol.service.entities.Overlay;
 import net.studioblueplanet.homecontrol.service.entities.Zone;
 
 import org.springframework.http.HttpStatus;
@@ -61,8 +63,8 @@ public class HomeController
      * Example method. Simply echos the account information
      * @return Information about my account
      */
-    @RequestMapping("/state")
-    public ResponseEntity<HomeState> state() 
+    @RequestMapping("/state/{homeId}")
+    public ResponseEntity<HomeState> state(@PathVariable int homeId) 
     {
         ResponseEntity<HomeState> stateResponse;
         HomeState                 state;
@@ -135,5 +137,23 @@ public class HomeController
         }    
         return zonesResponse;
     }
+    
+    @PutMapping("/overlay")
+    public ResponseEntity<String> overlay(@RequestBody Overlay overlay) 
+    {
+        ResponseEntity response;
+        Account account=accountService.getAccount();
+        if (account!=null)
+
+        {
+            
+            response=new ResponseEntity(HttpStatus.OK);
+        }
+        else
+        {
+            response=new ResponseEntity(HttpStatus.PRECONDITION_FAILED);
+        }
+        return response;
+    }    
     
 }
