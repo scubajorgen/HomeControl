@@ -7,6 +7,8 @@ package net.studioblueplanet.homecontrol.tado;
 
 import java.util.List;
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import net.studioblueplanet.homecontrol.tado.entities.TadoDevice;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
@@ -32,6 +34,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.client.ExpectedCount;
+import org.springframework.security.test.context.support.WithUserDetails;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
@@ -41,6 +45,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import net.studioblueplanet.homecontrol.Application;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.TimeZone;
@@ -51,6 +56,7 @@ import java.util.TimeZone;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class)
+@ContextConfiguration
 public class TadoInterfaceImplTest
 {
     @Autowired
@@ -82,6 +88,8 @@ public class TadoInterfaceImplTest
     public void setUp()
     {
         mockServer = MockRestServiceServer.createServer(restTemplate);
+        // Forget account information
+        tadoInterface.reset();
     }
     
     @After
@@ -92,10 +100,10 @@ public class TadoInterfaceImplTest
     
     private TadoToken authenticate() throws Exception
     {
-        String username = "name";
+        String username = "username@email.com";
         String password = "noonewillguessthis";
         String expectedRequestBody="client_id=tado-web-app&scope=home.user&"+
-                                   "grant_type=password&username="+username+"&password="+password+"&"+
+                                   "grant_type=password&username="+URLEncoder.encode(username, StandardCharsets.UTF_8.toString())+"&password="+password+"&"+
                                    "client_secret=wZaRN7rpjn3FoNyF5IFuxg9uMzYJcvOoQ8QWiIqS3hfk6gLhVlG57j5YNoZL2Rtc";
 
         String body = new String(Files.readAllBytes((new File("src/test/resources/tadoToken.json")).toPath()));        
@@ -129,7 +137,7 @@ public class TadoInterfaceImplTest
         // On second authenticate we don't expect a call to the server
         mockServer.reset();
         mockServer.expect(ExpectedCount.never(), requestTo(new URI("https://auth.tado.com/oauth/token")));        
-        result = tadoInterface.authenticate("name", "noonewillguessthis");
+        result = tadoInterface.authenticate("username@email.com", "noonewillguessthis");
         assertEquals("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MjljYjBlNS00MTg0LTQ3YjktYjFhMS1jN2Y4MjZkOTlkNjkiLCJ0YWRvX2hvbWVzIjpbeyJpZCI6NjMxMzE0fV0sImlzcyI6InRhZG8iLCJsb2NhbGUiOiJlbiIsImF1ZCI6InBhcnRuZXIiLCJuYmYiOjE2MTIyMDAzMjEsInRhZG9fc2NvcGUiOlsiaG9tZS51c2VyIl0sInRhZG9fdXNlcm5hbWUiOiJzY3ViYWpvcmdlbkBnbWFpbC5jb20iLCJuYW1lIjoiSm9yZ2VuIHZhbiBkZXIgVmVsZGUiLCJleHAiOjE2MTIyMDA5MjEsImlhdCI6MTYxMjIwMDMyMSwidGFkb19jbGllbnRfaWQiOiJ0YWRvLXdlYi1hcHAiLCJqdGkiOiJmZjIyNTcxZC1kMmU1LTQ1NTgtOWRlMi04NzI2ZjljZTc3ZDciLCJlbWFpbCI6InNjdWJham9yZ2VuQGdtYWlsLmNvbSJ9.k3Ug6k6h4LGQiXUIGAoAAfEEpOKlCJho0sMQY7Ed-cZu87rcQVrbtnVkDDEzGRWyRIrhhuxEzlN9_NKzs9qHFMvi0smMB--OYOZzLQyB4zGerkpvZ0WnJyxjqizFvtqFbYqG_5JMTES-QY8b5KQWioLKJZx8CBQlFIuM2EhXqRp2DE5iL-aBKvaGU8YS8VPdA1dmicO1TZd0fLKMU7TwyErdecVYfNVoENRdZOVjv_9b-IzlEh-NjaP5hOYJl0XEObVCydYdg-Jpwt_75iWtfD154qg0_k0UtDyJ7hOxwLMLx7Z2hZ_8stM58RtxpYWJYc8nIhmo2RNvEcxK8FMbHw", result.getAccess_token());
         mockServer.verify();
     }
@@ -148,10 +156,10 @@ public class TadoInterfaceImplTest
         // On second authenticate we don't expect a call to the server
         mockServer.reset();
     
-        String username = "name";
+        String username = "username@email.com";
         String password = "noonewillguessthis";
         String expectedRequestBody="client_id=tado-web-app&scope=home.user&"+
-                                   "grant_type=password&username="+username+"&password="+password+"&"+
+                                   "grant_type=password&username="+URLEncoder.encode(username, StandardCharsets.UTF_8.toString())+"&password="+password+"&"+
                                    "client_secret=wZaRN7rpjn3FoNyF5IFuxg9uMzYJcvOoQ8QWiIqS3hfk6gLhVlG57j5YNoZL2Rtc";
 
         String body = new String(Files.readAllBytes((new File("src/test/resources/tadoToken.json")).toPath()));        
@@ -182,8 +190,8 @@ public class TadoInterfaceImplTest
     /**
      * Test of tadoMe method, of class TadoInterfaceImpl.
      */
-
     @Test
+    @WithMockUser("username@email.com")
     public void testTadoMe() throws Exception
     {
         System.out.println("tadoMe");
@@ -203,6 +211,7 @@ public class TadoInterfaceImplTest
         assertEquals("12345678-1234-1234-1234-0123456789AB", result.getId());
         assertEquals("User name", result.getName());
         assertEquals("user@email.com", result.getEmail());
+        assertEquals("username@email.com", result.getUsername());
         assertEquals(1, result.getHomes().size());
         assertEquals(123456, result.getHomes().get(0).getId());
         assertEquals("HQ", result.getHomes().get(0).getName());
@@ -230,15 +239,16 @@ public class TadoInterfaceImplTest
         
         mockServer.verify();
     }
-
+    
     /**
      * Test of tadoMe method, of class TadoInterfaceImpl.
      */
 
     @Test
-    public void testTadoMeUnauthorized() throws Exception
+    @WithMockUser("username@email.com")
+    public void testTadoMeRepeated() throws Exception
     {
-        System.out.println("tadoMe unauthorized");
+        System.out.println("tadoMe");
         authenticate();
 
         mockServer.reset();
@@ -246,10 +256,46 @@ public class TadoInterfaceImplTest
         mockServer.expect(ExpectedCount.once(), 
           requestTo(new URI("https://my.tado.com/api/v2/me/")))
           .andExpect(method(HttpMethod.GET))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(body)
+        );                                   
+            
+        TadoMe result = tadoInterface.tadoMe();
+        assertEquals("12345678-1234-1234-1234-0123456789AB", result.getId());
+        
+        mockServer.verify();
+       
+        // Second call is retrieved from 
+        result = tadoInterface.tadoMe();
+        assertEquals("12345678-1234-1234-1234-0123456789AB", result.getId());  
+        mockServer.verify();
+    }
+    
+        
+
+    /**
+     * Test of tadoMe method, of class TadoInterfaceImpl.
+     */
+
+    @Test
+    @WithMockUser("username@email.com")
+    public void testTadoMeUnauthorized() throws Exception
+    {
+        System.out.println("tadoMe unauthorized");
+        authenticate();
+
+        mockServer.reset();
+        String body = "Unauthorized or something";
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/me/")))
+          .andExpect(method(HttpMethod.GET))
           .andRespond(withStatus(HttpStatus.UNAUTHORIZED)
           .contentType(MediaType.APPLICATION_JSON)
           .body(body)
-        );                             
+        );               
+        
+        // expect reauthorize TODO: is this right??
         String authBody = new String(Files.readAllBytes((new File("src/test/resources/tadoToken.json")).toPath()));
         mockServer.expect(ExpectedCount.once(), 
                 requestTo(new URI("https://auth.tado.com/oauth/token")))
@@ -268,6 +314,7 @@ public class TadoInterfaceImplTest
      * Test of tadoHome method, of class TadoInterfaceImpl.
      */
     @Test
+    @WithMockUser("username@email.com")
     public void testTadoHome() throws Exception
     {
         System.out.println("tadoHome");
@@ -316,6 +363,7 @@ public class TadoInterfaceImplTest
      * Test of tadoZones method, of class TadoInterfaceImpl.
      */
     @Test
+    @WithMockUser("username@email.com")
     public void testTadoZones() throws Exception
     {
         System.out.println("tadoZones");
@@ -371,6 +419,7 @@ public class TadoInterfaceImplTest
      * Test of tadoState method, of class TadoInterfaceImpl.
      */
     @Test
+    @WithMockUser("username@email.com")
     public void testTadoState() throws Exception
     {
         System.out.println("tadoState");
@@ -398,6 +447,7 @@ public class TadoInterfaceImplTest
      * Test of tadoZoneState method, of class TadoInterfaceImpl.
      */
     @Test
+    @WithMockUser("username@email.com")
     public void testTadoZoneStateHeating() throws Exception
     {
         System.out.println("tadoZoneState - Heating");
@@ -451,6 +501,7 @@ public class TadoInterfaceImplTest
      * Test of tadoZoneState method, of class TadoInterfaceImpl.
      */
     @Test
+    @WithMockUser("username@email.com")
     public void testTadoZoneStateHotwater() throws Exception
     {
         System.out.println("tadoZoneState - HW");
@@ -491,6 +542,7 @@ public class TadoInterfaceImplTest
      * Test of tadoZoneState method, of class TadoInterfaceImpl.
      */
     @Test
+    @WithMockUser("username@email.com")
     public void testSetTadoPresence() throws Exception
     {
         System.out.println("setTadoPresence");
@@ -522,6 +574,7 @@ public class TadoInterfaceImplTest
      * Test of tadoZones method, of class TadoInterfaceImpl.
      */
     @Test
+    @WithMockUser("username@email.com")
     public void testTadoDevices() throws Exception
     {
         System.out.println("tadoDevices");
@@ -554,6 +607,7 @@ public class TadoInterfaceImplTest
      * Test of setTadoOverlay method, of class TadoInterfaceImpl.
      */
     @Test
+    @WithMockUser("username@email.com")
     public void testSetTadoOverlayBoost() throws Exception
     {
         System.out.println("setTadoOverlay - Boost");
@@ -591,6 +645,7 @@ public class TadoInterfaceImplTest
      * Test of setTadoOverlay method, of class TadoInterfaceImpl.
      */
     @Test
+    @WithMockUser("username@email.com")
     public void testSetTadoOverlayInfinity() throws Exception
     {
         System.out.println("setTadoOverlay - Infinity");
@@ -628,6 +683,7 @@ public class TadoInterfaceImplTest
      * Test of setTadoOverlay method, of class TadoInterfaceImpl.
      */
     @Test
+    @WithMockUser("username@email.com")
     public void testSetTadoOverlayNextTimeBlock() throws Exception
     {
         System.out.println("setTadoOverlay - Next Time Block");
@@ -665,6 +721,7 @@ public class TadoInterfaceImplTest
      * Test of setTadoOverlay method, of class TadoInterfaceImpl.
      */
     @Test
+    @WithMockUser("username@email.com")
     public void testSetTadoOverlayHotWaterNextTimeBlock() throws Exception
     {
         System.out.println("setTadoOverlay - Next Time Block - Hot water off");
@@ -701,6 +758,7 @@ public class TadoInterfaceImplTest
      * Test of setTadoOverlay method, of class TadoInterfaceImpl.
      */
     @Test
+    @WithMockUser("username@email.com")
     public void testSetTadoOverlayHotWaterInfiniteTimeBlock() throws Exception
     {
         System.out.println("setTadoOverlay - Inf - Hot water off");

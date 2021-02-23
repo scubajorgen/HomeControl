@@ -5,11 +5,6 @@
  */
 package net.studioblueplanet.homecontrol.tado;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-//import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-//import com.fasterxml.jackson.databind.annotation.JsonSerialize.Inclusion;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -45,6 +40,8 @@ import org.springframework.web.client.RestTemplate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
  *
@@ -59,7 +56,6 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     // Guarded data
     private final Timer             timer;
     private final List<TadoAccount> accounts;
-    private TadoAccount             loggedInAccount;
     
     @Autowired
     private RestTemplate            template;
@@ -84,12 +80,8 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
         refreshToken();
     }
     
-    /**
-     * Find the account if it already exists.
-     * @param username Username to find
-     * @return The account or null if it not exists
-     */
-    private TadoAccount findAccount(String username)
+    @Override
+    public TadoAccount findAccount(String username)
     {
         TadoAccount account;
         account = accounts.stream()
@@ -97,6 +89,18 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
                     .findAny()
                     .orElse(null);    
         return account;
+    }
+    
+    /**
+     * Returns the logged in account
+     * @return The account
+     */
+    @Override
+    public TadoAccount loggedInAccount()
+    {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentPrincipalName = authentication.getName();  
+        return findAccount(currentPrincipalName);
     }
     
     /**
@@ -171,7 +175,6 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
             account=findAccount(username);
             if (account!=null)
             {
-                loggedInAccount=account;
                 localToken=account.getToken();
                 LOG.info("Account found for {}: acquired {}, expires {} (in {} seconds)", username, account.getLastRefresh(), account.expiryDate(), account.expiresIn());
             }
@@ -206,7 +209,6 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
                     {
                         account=new TadoAccount(username, password, localToken);
                         accounts.add(account);
-                        loggedInAccount=account;
                     }
                 }
             }
@@ -228,7 +230,6 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     {
         synchronized(this)
         {
-            loggedInAccount=null;
             accounts.clear();
         }         
     }
@@ -238,7 +239,6 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     {
         synchronized(this)
         {
-            loggedInAccount=null;
         }         
     }
      
@@ -249,24 +249,30 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     @Override
     public TadoMe tadoMe()
     {
-        LOG.info("Requesting Tado ME for user {}", loggedInAccount.getUsername());
-        TadoMe me;
-        HttpHeaders headers             = new HttpHeaders();
-        headers.setBearerAuth(loggedInAccount.getToken().getAccess_token());
-        HttpEntity entity               = new HttpEntity(headers);
+        TadoAccount loggedInAccount=loggedInAccount();
+        TadoMe      me=loggedInAccount.getTadoMe();
         
-        me=null;
-        try
+        if (me==null)
         {
-            ResponseEntity<TadoMe> response = template.exchange("https://my.tado.com/api/v2/me/", HttpMethod.GET, entity, TadoMe.class);        
-            me=response.getBody();
-        }
-        catch (TadoUnauthorizedException e)
-        {
-            LOG.error("Error requesting Tado account info for user {}: {}", loggedInAccount.getUsername(), e.getMessage());
-            // reauthenticate
-            loggedInAccount.setToken(null);
-            authenticate(loggedInAccount.getUsername(), loggedInAccount.getPassword());
+            LOG.info("Requesting Tado ME for user {}", loggedInAccount.getUsername());
+            HttpHeaders headers             = new HttpHeaders();
+            headers.setBearerAuth(loggedInAccount.getToken().getAccess_token());
+            HttpEntity entity               = new HttpEntity(headers);
+
+            me=null;
+            try
+            {
+                ResponseEntity<TadoMe> response = template.exchange("https://my.tado.com/api/v2/me/", HttpMethod.GET, entity, TadoMe.class);        
+                me=response.getBody();
+                loggedInAccount.setTadoMe(me); // cache account information
+            }
+            catch (TadoUnauthorizedException e)
+            {
+                LOG.error("Error requesting Tado account info for user {}: {}", loggedInAccount.getUsername(), e.getMessage());
+                // reauthenticate
+                loggedInAccount.setToken(null);
+                authenticate(loggedInAccount.getUsername(), loggedInAccount.getPassword());
+            }
         }
         return me;
     }
@@ -274,6 +280,8 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     @Override
     public TadoHome tadoHome(int homeId)
     {
+        TadoAccount loggedInAccount=loggedInAccount();
+
         LOG.info("Requesting Tado HOME for user {}", loggedInAccount.getUsername());
         HttpHeaders headers             = new HttpHeaders();
         headers.setBearerAuth(loggedInAccount.getToken().getAccess_token());
@@ -286,6 +294,8 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     @Override
     public List<TadoZone> tadoZones(int homeId)
     {
+        TadoAccount loggedInAccount=loggedInAccount();
+
         LOG.info("Requesting Tado ZONES for user {}, home {}", loggedInAccount.getUsername(), homeId);
         HttpHeaders headers             = new HttpHeaders();
         headers.setBearerAuth(loggedInAccount.getToken().getAccess_token());
@@ -298,6 +308,8 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     @Override
     public TadoState tadoState(int homeId)
     {
+        TadoAccount loggedInAccount=loggedInAccount();
+
         LOG.info("Requesting Tado STATE for user {}, home {}", loggedInAccount.getUsername(), homeId);
         HttpHeaders headers             = new HttpHeaders();
         headers.setBearerAuth(loggedInAccount.getToken().getAccess_token());
@@ -310,6 +322,8 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     @Override
     public TadoZoneState tadoZoneState(int homeId, int zoneId)
     {
+        TadoAccount loggedInAccount=loggedInAccount();
+
         LOG.info("Requesting Tado ZONES for user {}, home {}, zone {}", loggedInAccount.getUsername(), homeId, zoneId);
         HttpHeaders headers             = new HttpHeaders();
         headers.setBearerAuth(loggedInAccount.getToken().getAccess_token());
@@ -323,6 +337,8 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     @Override
     public void setTadoPresence(int homeId, TadoPresence.TadoHomePresence presence)
     {
+        TadoAccount loggedInAccount=loggedInAccount();
+
         LOG.info("Set Tado PRESENCE for user {}, home {}", loggedInAccount.getUsername(), homeId);
         TadoPresence thePresence;
         
@@ -338,6 +354,8 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     @Override
     public TadoOverlay tadoOverlay(int homeId, int zoneId)
     {
+        TadoAccount loggedInAccount=loggedInAccount();
+
         LOG.info("Request Tado OVERLAY for user {}, home {}, zone {}", loggedInAccount.getUsername(), homeId, zoneId);
         return null;
     }
@@ -345,6 +363,8 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     @Override
     public TadoOverlay setTadoOverlay(int homeId, int zoneId, TadoOverlay overlay)
     {
+        TadoAccount loggedInAccount=loggedInAccount();
+
         LOG.info("Set Tado OVERLAY for user {}, home {}, zone {}", loggedInAccount.getUsername(), homeId, zoneId);
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(loggedInAccount.getToken().getAccess_token());
@@ -357,6 +377,8 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     
     public TadoOverlay setTadoOverlay(int homeId, int zoneId, ZoneType type, State state, double temperature, Termination termination, int timerSeconds)
     {
+        TadoAccount loggedInAccount=loggedInAccount();
+
         LOG.info("Set Tado OVERLAY for user {}, home {}, zone {}", loggedInAccount.getUsername(), homeId, zoneId);
 
         TadoTemperature temp=new TadoTemperature();
@@ -409,6 +431,8 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     @Override
     public void deleteTadoOverlay(int homeId, int zoneId)
     {
+        TadoAccount loggedInAccount=loggedInAccount();
+
         LOG.info("Delete Tado OVERLAY for user {}, home {}, zone {}", loggedInAccount.getUsername(), homeId, zoneId);
         HttpHeaders headers             = new HttpHeaders();
         headers.setBearerAuth(loggedInAccount.getToken().getAccess_token());
@@ -421,6 +445,8 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     @Override
     public List<TadoDevice> tadoDevices(int homeId)
     {
+        TadoAccount loggedInAccount=loggedInAccount();
+
         LOG.info("Requesting Tado ZONES for user {}, home {}", loggedInAccount.getUsername(), homeId);
         HttpHeaders headers             = new HttpHeaders();
         headers.setBearerAuth(loggedInAccount.getToken().getAccess_token());

@@ -6,9 +6,12 @@
 package net.studioblueplanet.homecontrol.service;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import net.studioblueplanet.homecontrol.service.entities.Account;
+import net.studioblueplanet.homecontrol.service.entities.HomeId;
 import net.studioblueplanet.homecontrol.tado.TadoInterface;
+import net.studioblueplanet.homecontrol.tado.entities.TadoAccount;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
 import org.junit.After;
@@ -50,6 +53,11 @@ public class AccountServiceImplTest
     private TadoInterface tadoInterface;
     
     private TadoMe me;
+    private TadoMe friend1;
+    private TadoMe friend2;
+    private TadoAccount meAccount;
+    private TadoAccount friend1Account;
+    private TadoAccount friend2Account;
     
     public AccountServiceImplTest()
     {
@@ -68,19 +76,56 @@ public class AccountServiceImplTest
     @Before
     public void setUp()
     {
+        instance.reset();
+        
         me=new TadoMe();
         me.setId("Me ID");
-        me.setName("this is me");
+        me.setName("The dude");
         me.setEmail("my email");
         me.setLocale("locale");
-        me.setUsername("my username");
-
+        me.setUsername("theUser@email.com");
+        ArrayList<TadoHome> homes=new ArrayList<>();
         TadoHome    home=new TadoHome();
         home.setId(12345);
         home.setName("Home");
-        ArrayList<TadoHome> homes=new ArrayList<>();
         homes.add(home);
         me.setHomes(homes);
+        meAccount=new TadoAccount("theUser@email.com", "", null);
+        meAccount.setTadoMe(me);
+        
+        friend1=new TadoMe();
+        friend1.setId("Friend 1 ID");
+        friend1.setName("The dudes friend");
+        friend1.setEmail("friend 1 email");
+        friend1.setLocale("locale");
+        friend1.setUsername("friend1@email.com");
+        homes=new ArrayList<>();
+        home=new TadoHome();
+        home.setId(54321);
+        home.setName("Friend 1 Home");
+        homes.add(home);
+        friend1.setHomes(homes);        
+        friend1Account=new TadoAccount("friend1@email.com", "", null);
+        friend1Account.setTadoMe(friend1);
+        
+        friend2=new TadoMe();
+        friend2.setId("Friend 2 ID");
+        friend2.setName("The dudes other friend");
+        friend2.setEmail("friend 2 email");
+        friend2.setLocale("locale");
+        friend2.setUsername("friend2@email.com");
+        homes=new ArrayList<>();
+        home=new TadoHome();
+        home.setId(54323);
+        home.setName("Friend 2 1st Home");
+        homes.add(home);
+        home=new TadoHome();
+        home.setId(54322);
+        home.setName("Friend 2 2nd Home");
+        homes.add(home);
+        friend2.setHomes(homes);        
+        friend2Account=new TadoAccount("friend2@email.com", "", null);
+        friend2Account.setTadoMe(friend2);
     }
     
     @After
@@ -88,6 +133,34 @@ public class AccountServiceImplTest
     {
     }
 
+    
+    /**
+     * Test of reset method, of class AccountServiceImpl.
+     */
+    @Test
+    public void testReset()
+    {
+        System.out.println("reset");
+
+        Mockito.reset(tadoInterface);
+        Mockito.when(tadoInterface.findAccount("theUser@email.com")).thenReturn(meAccount);
+        Mockito.when(tadoInterface.findAccount("friend1@email.com")).thenReturn(friend1Account);
+        Mockito.when(tadoInterface.findAccount("friend2@email.com")).thenReturn(friend2Account);
+
+        Mockito.when(tadoInterface.tadoMe()).thenReturn(friend1);
+        instance.addToFriendAccount("theUser@email.com");
+        Mockito.when(tadoInterface.tadoMe()).thenReturn(friend2);
+        instance.addToFriendAccount("theUser@email.com");
+        Mockito.when(tadoInterface.tadoMe()).thenReturn(me);
+
+        List<String> friends=instance.getFriendAccountUsernames();
+        assertEquals(2, friends.size());     
+        
+        instance.reset();
+        friends=instance.getFriendAccountUsernames();
+        assertEquals(0, friends.size());     
+    }    
+    
     /**
      * Test of getAccount method, of class AccountServiceImpl.
      */
@@ -108,11 +181,101 @@ public class AccountServiceImplTest
         assertEquals(me.getName(), result.getName());
         assertEquals(me.getHomes().get(0).getName(), result.getHomes().get(0).getName());
         verify(tadoInterface, times(1)).tadoMe();
-        
-        // On the second call the account is fetched from cache and not from Tado
-        result = instance.getAccount();
-        assertEquals(me.getId(), result.getId());
-        verify(tadoInterface, times(1)).tadoMe();  
     }
+
+    /**
+     * Test of getAccount method, of class AccountServiceImpl.
+     */
+    @Test
+    public void testAddToFriendAccount()
+    {
+        Account meAccount;
+        Account friendAccount;
+        System.out.println("addToFriendAccount");
+
+
+        Mockito.reset(tadoInterface);
+        Mockito.when(tadoInterface.tadoMe()).thenReturn(me);
+
+        instance.addToFriendAccount("friend1@email.com");
+        List<String> friends=instance.getFriendAccountUsernames();
+        assertNotNull(friends);
+        assertEquals(0, friends.size());
+        verify(tadoInterface, times(2)).tadoMe();
+        
+        Mockito.reset(tadoInterface);
+        Mockito.when(tadoInterface.tadoMe()).thenReturn(friend1);
+        friends=instance.getFriendAccountUsernames();
+        assertNotNull(friends);
+        assertEquals(1, friends.size());
+        assertEquals(me.getUsername(), friends.get(0));
+        verify(tadoInterface, times(1)).tadoMe();
+    }
+    
+    /**
+     * Test of getAccount method, of class AccountServiceImpl.
+     */
+    @Test
+    public void testGetAvailableHomes()
+    {
+        System.out.println("getAvailableHomes");
+
+        Mockito.reset(tadoInterface);
+        Mockito.when(tadoInterface.findAccount("theUser@email.com")).thenReturn(meAccount);
+        Mockito.when(tadoInterface.findAccount("friend1@email.com")).thenReturn(friend1Account);
+        Mockito.when(tadoInterface.findAccount("friend2@email.com")).thenReturn(friend2Account);
+
+        Mockito.when(tadoInterface.tadoMe()).thenReturn(friend1);
+        instance.addToFriendAccount("theUser@email.com");
+        instance.addToFriendAccount("friend2@email.com");
+        Mockito.when(tadoInterface.tadoMe()).thenReturn(friend2);
+        instance.addToFriendAccount("theUser@email.com");
+
+        Mockito.when(tadoInterface.tadoMe()).thenReturn(me);
+        List<HomeId> homes=instance.getAvailableHomes();
+        assertEquals(4, homes.size());
+        assertEquals(12345, homes.get(0).getId());
+        assertEquals(54321, homes.get(1).getId());
+        assertEquals(54323, homes.get(2).getId());
+        assertEquals(54322, homes.get(3).getId());
+
+        Mockito.when(tadoInterface.tadoMe()).thenReturn(friend1);
+        homes=instance.getAvailableHomes();
+        assertEquals(1, homes.size());
+        assertEquals(54321, homes.get(0).getId());
+        
+        Mockito.when(tadoInterface.tadoMe()).thenReturn(friend2);
+        homes=instance.getAvailableHomes();
+        assertEquals(3, homes.size());
+        assertEquals(54323, homes.get(0).getId());
+        assertEquals(54322, homes.get(1).getId());
+        assertEquals(54321, homes.get(2).getId());
+    }
+    
+    /**
+     * Test of reset method, of class AccountServiceImpl.
+     */
+    @Test
+    public void testGetFriendAccountUsernames()
+    {
+        System.out.println("getFriendAccountUsernames");
+
+        Mockito.reset(tadoInterface);
+        Mockito.when(tadoInterface.findAccount("theUser@email.com")).thenReturn(meAccount);
+        Mockito.when(tadoInterface.findAccount("friend1@email.com")).thenReturn(friend1Account);
+        Mockito.when(tadoInterface.findAccount("friend2@email.com")).thenReturn(friend2Account);
+
+        Mockito.when(tadoInterface.tadoMe()).thenReturn(friend2);
+        instance.addToFriendAccount("theUser@email.com");
+        Mockito.when(tadoInterface.tadoMe()).thenReturn(friend1);
+        instance.addToFriendAccount("theUser@email.com");
+        Mockito.when(tadoInterface.tadoMe()).thenReturn(me);
+
+        List<String> friends=instance.getFriendAccountUsernames();
+        assertEquals(2, friends.size());
+        assertEquals("friend1@email.com", friends.get(0));
+        assertEquals("friend2@email.com", friends.get(1));
+    }    
+    
     
 }

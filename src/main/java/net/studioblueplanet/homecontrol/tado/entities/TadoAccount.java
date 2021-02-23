@@ -17,10 +17,16 @@ public class TadoAccount
     private static final long   MILLISECONDSPERSECOND=1000;
     private static final int    REFRESHBEFORESECONDS =60;
     
+    /** Username, usually the e-mail */
     private String              username;
+    /** Password */
     private String              password;
+    /** Tokens as retrieved from OAuth server from Tado */
     private TadoToken           token;
+    /** Datetime of last token refresh */
     private Date                lastRefresh;
+    /** Account information from Tado */
+    private TadoMe              tadoMe;
 
     public TadoAccount(String username, String password, TadoToken token)
     {
@@ -109,5 +115,15 @@ public class TadoAccount
     public boolean needsRefresh()
     {
         return (expiresIn()<REFRESHBEFORESECONDS);
+    }
+
+    public TadoMe getTadoMe()
+    {
+        return tadoMe;
+    }
+
+    public void setTadoMe(TadoMe tadoMe)
+    {
+        this.tadoMe = tadoMe;
     }
 }

@@ -19,11 +19,9 @@ public class Account
     private String                  email;
     private String                  username;
     private List<HomeId>            homes;
-    private List<String>            friendAccountUsernames;
-    
+   
     public Account()
     {
-        this.friendAccountUsernames=new ArrayList<>();
     }
     
     public String getId()
@@ -74,21 +72,5 @@ public class Account
     public void setHomes(List<HomeId> homes)
     {
         this.homes = homes;
-    }
-
-    public List<String> getFriendAccountUsernames()
-    {
-        return friendAccountUsernames;
-    }
-
-    public void setFriendAccountUsernames(List<String> friendAccountUsernames)
-    {
-        this.friendAccountUsernames.clear();
-        this.friendAccountUsernames.addAll(friendAccountUsernames);
-    }
-    
-    public void addFriendAccountUsername(String username)
-    {
-        this.friendAccountUsernames.add(username);
     }
 }

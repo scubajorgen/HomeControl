@@ -6,6 +6,7 @@
 package net.studioblueplanet.homecontrol.tado;
 
 import java.util.List;
+import net.studioblueplanet.homecontrol.tado.entities.TadoAccount;
 
 import net.studioblueplanet.homecontrol.tado.entities.TadoDevice;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
@@ -62,6 +63,19 @@ public interface TadoInterface
      * Remove all traced accounts.
      */
     public void             reset();
+    
+    /**
+     * Find the account if it already exists.
+     * @param username Username to find
+     * @return The account or null if it not exists
+     */
+    public TadoAccount findAccount(String username);
+
+    /**
+     * Retrieves the TadoAccount of currently logged in user
+     * @return The account
+     */
+    public TadoAccount      loggedInAccount();
     
     /**
      * Requests information on the account
