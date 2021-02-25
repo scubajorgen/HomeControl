@@ -2,47 +2,436 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org"
       xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
   <head>
-    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous"></head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <!-- default header name is X-CSRF-TOKEN -->
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+    crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+    crossorigin=""></script>
+    <script>
+      var currentHome;
+      var zones;
+      var zoneIndex;
+      var map;
+      var marker=null;
+      /***********************************************************************************************\
+      *
+      \***********************************************************************************************/ 
+      function initialize()
+      {
+        var osm;
+        map = L.map('homeInfoMap');
+	      osm= new L.TileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', 
+                                  {minZoom: 3, maxZoom: 18, 
+                                   attribution: 'Map data &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'});		
+	      map.addLayer(osm);
+      
+        $('#zoneEditTermination').val('TIMER');
+        $('#zoneEditPower').change(handlePower);
+        $('#zoneEditTermination').change(handleTermination);
+        $('#zoneEditExecute').click(editZoneExecute);
+        loadAccountInfo();
+      }
+
+      /***********************************************************************************************\
+      *
+      \***********************************************************************************************/ 
+      function displayAccountInfo(response)
+      {
+        var html;
+        var i;
+
+        html='';
+        html+='ID: '+response.id+'<br>';
+        html+='Name: '+response.name+'<br>';
+        html+='E-mail: '+response.email+'<br>';
+        html+='Username: '+response.username+'<br>';
+
+        html+="<b>Homes:</b><br>";
+        i=0;
+        response.accessibleHomes.forEach(element => 
+        {
+          html+='<div class="row">';
+          html+='<div class="col-sm-2"><b><i>'+element.name+'</i></b></div>';
+          html+='<div class="col-sm-2"><a href="javascript:loadHomeInfo('+element.id+',\''+element.name+
+                    '\');" role="button" class="btn btn-outline-success btn-block"><i class="fas fa-home"></i> Home </a></div>'+  
+                '<div class="col-sm-2"><a href="javascript:loadZoneInfo('+element.id+',\''+element.name+
+                    '\');" role="button" class="btn btn-outline-success btn-block"><i class="fas fa-grip-horizontal"></i> Zones </a></div>';  
+          html+='</div><br>';
+        });
+        document.getElementById("accountInfo").innerHTML=html;
+      }
+
+      /***********************************************************************************************\
+      *
+      \***********************************************************************************************/ 
+      function loadAccountInfo()
+      {
+        var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() 
+          {
+              if (this.readyState == 4 && this.status == 200) 
+              {
+                displayAccountInfo(JSON.parse(this.responseText));
+              }
+          };
+          xhttp.open("GET", "/api/account", true);
+          xhttp.setRequestHeader("Content-type", "application/json");
+          xhttp.send("");        
+      }
+
+      /***********************************************************************************************\
+      *
+      \***********************************************************************************************/ 
+      function displayHomeInfo(response)
+      {
+        var html;
+        var i;
+
+        currentHome=response;
+
+        html='<p>';
+        html+='ID: '+response.id+'<br>';
+        html+='Name: '+response.name+'<br>';
+        html+='Time zone: '+response.dateTimeZone+'<br>';
+        html+='Temperature unit: '+response.temperatureUnit+'<br>';
+        html+='Away radius: '+response.awayRadiusInMeters+' m<br>';
+        html+='Location: ('+response.latitude+', '+response.longitude+')<br>';
+        html+='Presence: '+response.presence+'<br>';
+        html+='Contact: '+response.contact+'<br>';
+        html+='Address: '+response.addressLine1+'<br>';
+        if (response.addressLine2!=null)
+        {
+          html+='Address: '+response.addressLine2+'<br>';
+        }
+        html+='Zipcode: '+response.zipCode+'<br>';
+        html+='City: '+response.city+'<br>';
+        html+='Country: '+response.country+'<br>';
+        html+='</p><br>';
+
+
+        $("#homeInfo").html(html);
+        $('#zoneInfoContainer').hide();
+        $('#homeInfoContainer').show();  
+        // Map
+        if (marker != undefined) 
+        {
+          map.removeLayer(marker);
+        }
+        marker=L.marker([response.latitude, response.longitude]).addTo(map);
+        map.setView(new L.LatLng(response.latitude, response.longitude), 13)
+        map.invalidateSize();
+      }
+
+      /***********************************************************************************************\
+      *
+      \***********************************************************************************************/ 
+      function loadHomeInfo(homeId, homeName)
+      {
+        var xhttp;
+          var queryString;
+          var urlParams;
+
+          xhttp = new XMLHttpRequest()
+          xhttp.onreadystatechange = function() 
+          {
+              if (this.readyState == 4 && this.status == 200) 
+              {
+                $('#homeInfoTitle').html('<H3>Home <i>'+homeName+'</i></H3>');
+                displayHomeInfo(JSON.parse(this.responseText));
+              }
+          };
+          xhttp.open("GET", "/api/home/"+homeId, true);
+          xhttp.setRequestHeader("Content-type", "application/json");
+          xhttp.send("");        
+      }
+
+      /***********************************************************************************************\
+      *
+      \***********************************************************************************************/ 
+      function displayZoneInfo(response)
+      {
+        var html;
+        var i;
+
+        zones=response;
+
+        html = '<table class="table">';
+        html += '<tr>';
+        html += '<td>Name</td>';
+        html += '<td>Type</td>';
+        html += '<td>Power</td>';
+        html += '<td>Temperature</td>';
+        html += '<td>Temperature Setpoint</td>';
+        html += '<td>Humidity</td>';
+        html += '<td>Presence</td>';
+        html += '</tr>';
+        for (i = 0; i < response.length; i++)
+        {
+          html += '<tr>';
+          html += '<td>' + response[i].name + '</td>';
+          html += '<td>' + response[i].type + '</td>';
+          html += '<td>' + response[i].power + '</td>';
+          if (response[i].temperature != null)
+          {
+            html += '<td>' + response[i].temperature + ' °C</td>';
+          }
+          else
+          {
+            html += '<td></td>';
+          }
+          if (response[i].temperatureSetpoint != null)
+          {
+            html += '<td>' + response[i].temperatureSetpoint + ' °C</td>';
+          }
+          else
+          {
+            html += '<td></td>';
+          }
+          if (response[i].humidity != null)
+          {
+            html += '<td>' + response[i].humidity + ' %</td>';
+          }
+          else
+          {
+            html += '<td></td>';
+          }
+          html += '<td>' + response[i].tadoMode + '</td>';
+          html += '<td><a href="javascript:editZone(' + i + ')" role="button" class="btn btn-outline-warning btn-block"><i class="fas fa-edit"></i> Edit</a></td>';
+          html += '</tr>';
+        }
+        $('#zoneInfo').html(html);
+        $('#zoneInfoContainer').show();
+        $('#homeInfoContainer').hide();
+
+      }
+
+      /***********************************************************************************************\
+      *
+      \***********************************************************************************************/ 
+      function loadZoneInfo(homeId, homeName)
+      {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function ()
+        {
+          if (this.readyState == 4 && this.status == 200)
+          {
+            $('#zoneInfoTitle').html('<H3>Zones for <i>'+homeName+'</i></H3>');
+            displayZoneInfo(JSON.parse(this.responseText));
+          }
+        };
+        xhttp.open("GET", "/api/home/"+homeId+"/zones", true);
+        xhttp.setRequestHeader("Content-type", "application/json");
+        xhttp.send("");
+      }
+
+      /***********************************************************************************************\
+      *
+      \***********************************************************************************************/ 
+      function editZone(zoneIndex)
+      {
+        $('#zoneEditTitle').html("Edit zone "+zones[zoneIndex].name);
+        $('#zoneEditTemperature').val(zones[zoneIndex].temperatureSetpoint);
+        $('#zoneEditTermination').val("TIMER");
+        $('#zoneEditTimer').val(30);
+        $('#zoneEditTemperature').attr('step', zones[zoneIndex].temperaturePrecision);
+
+        $('#zoneEditModal').modal("show");
+      }
+
+      /***********************************************************************************************\
+      *
+      \***********************************************************************************************/ 
+      function editZoneExecute()
+      {
+        alert('Go');
+      }
+
+      /***********************************************************************************************\
+      *
+      \***********************************************************************************************/ 
+      function handlePower()
+      {
+        power=$('#zoneEditPower').val();
+        if (power=='ON')
+        {
+          $('#zoneEditTemperature').prop( "disabled", false );
+          $('#zoneEditTermination').prop( "disabled", false );
+          handleTermination();
+        }
+        else
+        {
+          $('#zoneEditTemperature').prop( "disabled", true );
+          $('#zoneEditTermination').prop( "disabled", true );
+          $('#zoneEditTimer').prop( "disabled", true );
+        }
+      }
+
+      /***********************************************************************************************\
+      *
+      \***********************************************************************************************/ 
+      function handleTermination()
+      {
+        term=$('#zoneEditTermination').val();
+        if (term=='TIMER')
+        {
+          $('#zoneEditTimer').prop( "disabled", false );
+        }
+        else 
+        {
+          $('#zoneEditTimer').prop( "disabled", true );
+        }
+      }
+
+      /***********************************************************************************************\
+      *
+      \***********************************************************************************************/ 
+      function setPresence(presence)
+      {
+        var xhttp = new XMLHttpRequest();
+        var header = document.querySelector("[name='_csrf_header'][content]").content
+        var headerValue = document.querySelector("[name='_csrf'][content]").content
+
+        xhttp.onreadystatechange = function() 
+        {
+            if (this.readyState == 4 && this.status == 200) 
+            {
+              loadHomeInfo(currentHome.id, currentHome.name);
+            }
+        };
+        xhttp.open("PUT", "/api/home/"+currentHome.id+"/presence", true);
+        xhttp.setRequestHeader("Content-type", "text/plain");
+        xhttp.setRequestHeader(header, headerValue);
+        xhttp.send(presence);        
+      }
+
+      /***********************************************************************************************\
+      *
+      \***********************************************************************************************/ 
+      function test()
+      {
+        zones=[{name: "TestZone", 
+                id: 1,
+                power: "ON",
+                temperature: 20.15,
+                temperatureSetpoint: 23,
+                temperaturePrecision: 1.0,
+                termination: 'INFINITE',
+                timer: 1860}];
+        editZone(0);
+      }    
+    </script>
   </head>
-  <body>
-    <H1>Home Controller</H1>
-	
-    <h3>
-      <p th:inline="text"><b></b>Hello [[${#httpServletRequest.remoteUser}]]!</b></p>
-    </h3>        
-    <div class="container-fluid">
-      <div class="row">
-          <div class="col-sm-2">
-            <a href="account.html" role="button" class="btn btn-primary btn-block">
-              <i class="fas fa-address-card"></i> Account info
-            </a>
+  <body onload="javascript:initialize();">
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark bg-primary justify-content-between">
+      <a class="navbar-brand">HomeControl</a>
+      <form class="form-inline" th:action="@{/logout}" method="post">
+        <input  class="btn btn-outline-success my-2 my-sm-0"type="submit" value="Sign Out"/>
+      </form>
+    </nav><br>
+
+    <!-- Account info -->
+    <div class="container-fluid" id="accountInfoContainer">
+      <div class="card">
+        <div class="card-header" id="accountInfoTitle"><h3>Welcome [[${#httpServletRequest.remoteUser}]]</h3></div>
+        <div class="card-body">
+          <div id="accountInfo"></div>
+        </div>
+      </div>
+    </div><br>
+
+    <!-- Home info -->
+    <div class="container-fluid" id="homeInfoContainer" style="display:none;">
+      <div class="card">
+        <div class="card-header" id="homeInfoTitle"><h3>Home</h3></div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-sm-6" id="homeInfo"></div>
+            <div class="col-sm-6" id="homeInfoMap"></div>  
           </div>
-          <div class="col-sm-2">
-            <a href="home.html" role="button" class="btn btn-primary btn-block">
-              <i class="fas fa-home"></i> Home
-            </a>
-          </div>
-          <div class="col-sm-2">
-            <a href="homestate.html" role="button" class="btn btn-primary btn-block">
-              <i class="fas fa-user-check"></i> Presence
-            </a>
-          </div>
-          <div class="col-sm-2">
-            <a href="zones.html" role="button" class="btn btn-primary btn-block">
-              <i class="fas fa-grip-horizontal"></i> Zones
-            </a>
+          <div class="row">
+            <div class="col-sm-2">
+              <a href="javascript:setPresence('HOME')" role="button" class="btn btn-outline-primary btn-block">
+                <i class="fas fa-home"></i> Home
+              </a>
+            </div>
+            <div class="col-sm-2">
+              <a href="javascript:setPresence('AWAY')" role="button" class="btn btn-outline-primary btn-block">
+                <i class="fas fa-sign-out-alt"></i> Away
+              </a>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    <br>
-    <div class="alert alert-primary" role="alert">
-      [[${@tadoInterface.tadoMe()}]]
-    </div>
+    </div><br> 
+    
+    <!-- Zone info -->
+    <div class="container-fluid"  id="zoneInfoContainer" style="display:none;">
+      <div class="card">
+        <div class="card-header" id="zoneInfoTitle"><h3>Zones</h3></div>
+        <div class="card-body">
+          <div id="zoneInfo"></div>
+        </div>
+      </div>
+    </div><br>
 
-    <form th:action="@{/logout}" method="post">
-      <input  class="btn btn-primary btn-block"type="submit" value="Sign Out"/>
-    </form>
+
+    <!-- Edit Zone Modal -->
+    <div id="zoneEditModal" class="modal fade" role="dialog">
+      <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 id="zoneEditTitle" class="modal-title"></h4>
+            <button type="button" class="close" data-dismiss="modal"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+                <label for="zoneEditPower">Zone</label>
+              <select class="form-control" id="zoneEditPower">
+                <option value="ON">On</option>
+                <option value="OFF">Off</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="zoneEditTemperature">Temperature</label>
+              <input type="number" class="form-control" id="zoneEditTemperature" value="20.1" step="0.1">
+            </div> 
+
+            <div class="form-group">
+              <label for="zoneEditTermination">Termination</label>
+              <select class="form-control" id="zoneEditTermination">
+                <option value="INFINITE">Manual</option>
+                <option value="NEXTTIMEBLOCK">Till next time block</option>
+                <option value="TIMER">Timer</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="zoneEditTimer">Timer (minutes)</label>
+              <input type="number" class="form-control" id="zoneEditTimer" value="30" step="1">
+            </div> 
+
+            <button id="zoneEditExecute" type="submit" class="form-control btn btn-primary">Execute</button>
+
+            <div id="zoneEditModalError" style="width:100%; height:100%; display:none; ">
+              <h3>Error</h3>
+              Sorry there was an error processing your form.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>    
   </body>
 </html>

@@ -72,7 +72,7 @@ public class HomeController
         Account account=accountService.getAccount();
         if (account!=null)
         {
-            state=homeService.getHomeState(account.getHomes().get(0).getId());
+            state=homeService.getHomeState(account.getOwnHomes().get(0).getId());
             stateResponse=ResponseEntity.ok(state);
         }
         else
@@ -82,15 +82,15 @@ public class HomeController
         return stateResponse;
     }
     
-    @PutMapping("/presence")
-    public ResponseEntity<String> presence(@RequestBody String presence) 
+    @PutMapping("/home/{homeId}/presence")
+    public ResponseEntity<String> presence(@PathVariable int homeId, @RequestBody String presence) 
     {
         ResponseEntity response;
         Account account=accountService.getAccount();
         if (account!=null)
 
         {
-            homeService.setPresence(account.getHomes().get(0).getId(), presence);
+            homeService.setPresence(homeId, presence);
             response=new ResponseEntity(HttpStatus.OK);
         }
         else
@@ -100,8 +100,8 @@ public class HomeController
         return response;
     }
 
-    @RequestMapping("/home")
-    public ResponseEntity<Home> home() 
+    @RequestMapping("/home/{homeId}")
+    public ResponseEntity<Home> home(@PathVariable int homeId) 
     {
         ResponseEntity<Home>    homeResponse;
         Home                    home;
@@ -109,7 +109,8 @@ public class HomeController
         Account account=accountService.getAccount();
         if (account!=null)
         {
-            home=homeService.getHome(account.getHomes().get(0).getId());
+            // TODO: check validity of homeId
+            home=homeService.getHome(homeId);
             homeResponse=ResponseEntity.ok(home);
         }
         else
@@ -119,8 +120,8 @@ public class HomeController
         return homeResponse;
     }
     
-    @RequestMapping("/zones")
-    public ResponseEntity<List<Zone>> zones() 
+    @RequestMapping("/home/{homeId}/zones")
+    public ResponseEntity<List<Zone>> zones(@PathVariable int homeId) 
     {
         ResponseEntity<List<Zone>>  zonesResponse;
         List<Zone>                  zones;
@@ -128,7 +129,7 @@ public class HomeController
         Account account=accountService.getAccount();
         if (account!=null)
         {
-            zones=homeService.getZones(account.getHomes().get(0).getId());
+            zones=homeService.getZones(homeId);
             zonesResponse=ResponseEntity.ok(zones);
         }
         else

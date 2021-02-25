@@ -38,8 +38,6 @@ public class HomeServiceImpl implements HomeService
     
     private Account         account;
     
-    private boolean         mappingRegistered=false;
-    
     @PostConstruct
     public void init()
     {
@@ -84,8 +82,6 @@ public class HomeServiceImpl implements HomeService
                 .field("sensorDataPoints.insideTemperature.precision.celsius", "temperaturePrecision")
                 .field("sensorDataPoints.humidity.percentage", "humidity")
                 .register();
-
-        mappingRegistered=true;
     }
     
     @Override

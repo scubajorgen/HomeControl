@@ -14,11 +14,18 @@ import java.util.List;
  */
 public class Account
 {
+    /** Tado account ID */
     private String                  id;
+    /** Name */
     private String                  name;
+    /** E-Mail */
     private String                  email;
+    /** Username - key */
     private String                  username;
-    private List<HomeId>            homes;
+    /** Home owned by the account */
+    private List<HomeId>            ownHomes;
+    /** Homes to which the account has access: own homes and friend homes */
+    private List<HomeId>            accessibleHomes;
    
     public Account()
     {
@@ -64,13 +71,23 @@ public class Account
         this.username = username;
     }
 
-    public List<HomeId> getHomes()
+    public List<HomeId> getOwnHomes()
     {
-        return homes;
+        return ownHomes;
     }
 
-    public void setHomes(List<HomeId> homes)
+    public void setOwnHomes(List<HomeId> homes)
     {
-        this.homes = homes;
+        this.ownHomes = homes;
+    }
+
+    public List<HomeId> getAccessibleHomes()
+    {
+        return accessibleHomes;
+    }
+
+    public void setAccessibleHomes(List<HomeId> accessibleHomes)
+    {
+        this.accessibleHomes = accessibleHomes;
     }
 }

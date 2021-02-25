@@ -15,14 +15,17 @@ import ma.glasnost.orika.MapperFacade;
 import net.studioblueplanet.homecontrol.service.entities.Account;
 import net.studioblueplanet.homecontrol.service.entities.FriendAccount;
 import net.studioblueplanet.homecontrol.service.entities.HomeId;
+import net.studioblueplanet.homecontrol.tado.TadoAccountManager;
 import net.studioblueplanet.homecontrol.tado.TadoInterface;
 import net.studioblueplanet.homecontrol.tado.entities.TadoAccount;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
+import net.studioblueplanet.homecontrol.data.Persistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 
 /**
  *
@@ -34,12 +37,18 @@ public class AccountServiceImpl implements AccountService
     private static final Logger     LOG = LoggerFactory.getLogger(AccountServiceImpl.class); 
 
     @Autowired
-    private TadoInterface   tado;
+    private TadoInterface           tado;
     
     @Autowired
-    private MapperFactory   mapperFactory;
+    private TadoAccountManager      accountManager;
     
-    List<FriendAccount>     friendAccounts;
+    @Autowired
+    private Persistence             persistence;
+    
+    @Autowired
+    private MapperFactory           mapperFactory;
+    
+    private List<FriendAccount>     friendAccounts;
     
     /**
      * Constructor
@@ -56,6 +65,7 @@ public class AccountServiceImpl implements AccountService
     public void init()
     {
         registerMappings();
+        friendAccounts=persistence.restoreFriends();
     }
 
     /**
@@ -66,12 +76,14 @@ public class AccountServiceImpl implements AccountService
         
         mapperFactory.classMap(TadoMe.class, Account.class)
         .byDefault()
+        .field("homes", "ownHomes")
         .register();
 
         mapperFactory.classMap(TadoHome.class, HomeId.class)
                 .byDefault()
                 .register();
     }
+    
     
     /**
      * Retrieve the account information from Tado.
@@ -107,6 +119,10 @@ public class AccountServiceImpl implements AccountService
     public Account getAccount()
     {
         Account account=retrieveAccountFromTado();
+        if (account!=null)
+        {
+            account.setAccessibleHomes(getAvailableHomes());
+        }
         return account;
     }
     
@@ -118,6 +134,7 @@ public class AccountServiceImpl implements AccountService
         friend.setAccount(friendAccountUsername);
         friend.setFriendAccount(account.getUsername());
         friendAccounts.add(friend);
+//        storeFriends();
     }
     
     @Override
@@ -143,19 +160,25 @@ public class AccountServiceImpl implements AccountService
         
         Account account=retrieveAccountFromTado();
         
-        homeList=account.getHomes().stream().collect(Collectors.toList());
-        
+        homeList=account.getOwnHomes().stream().collect(Collectors.toList());
+        homeList.stream().forEach(ac -> ac.setAccountUserName(account.getUsername()));
+
         it=friendAccounts.iterator();
         while (it.hasNext())
         {
             friend=it.next();
             if (friend.getAccount().equals(account.getUsername()))
             {
-                friendAccount=tado.findAccount(friend.getFriendAccount());
-                friendHomes=friendAccount.getTadoMe().getHomes();
-                MapperFacade mapper = mapperFactory.getMapperFacade();
-                List<HomeId> friendHomeList=mapper.mapAsList(friendHomes, HomeId.class);
-                homeList.addAll(friendHomeList);
+                friendAccount=accountManager.findAccount(friend.getFriendAccount());
+                if (friendAccount!=null)
+                {
+                    friendHomes=friendAccount.getTadoMe().getHomes();
+                    MapperFacade mapper = mapperFactory.getMapperFacade();
+                    List<HomeId> friendHomeList=mapper.mapAsList(friendHomes, HomeId.class);
+                    String friendAccountUserName=friend.getFriendAccount();
+                    friendHomeList.stream().forEach(fa -> fa.setAccountUserName(friendAccountUserName));
+                    homeList.addAll(friendHomeList);
+                }
             }
         }
 

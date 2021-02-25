@@ -13,6 +13,7 @@ public class HomeId
 {
     private int     id;
     private String  name;
+    private String  accountUserName;
 
     public int getId()
     {
@@ -33,5 +34,14 @@ public class HomeId
     {
         this.name = name;
     }
-    
+
+    public String getAccountUserName()
+    {
+        return accountUserName;
+    }
+
+    public void setAccountUserName(String accountUserName)
+    {
+        this.accountUserName = accountUserName;
+    }    
 }

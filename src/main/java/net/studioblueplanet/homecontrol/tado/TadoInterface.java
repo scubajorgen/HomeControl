@@ -65,19 +65,6 @@ public interface TadoInterface
     public void             reset();
     
     /**
-     * Find the account if it already exists.
-     * @param username Username to find
-     * @return The account or null if it not exists
-     */
-    public TadoAccount findAccount(String username);
-
-    /**
-     * Retrieves the TadoAccount of currently logged in user
-     * @return The account
-     */
-    public TadoAccount      loggedInAccount();
-    
-    /**
      * Requests information on the account
      * @return Account information including a list of Home IDs
      */

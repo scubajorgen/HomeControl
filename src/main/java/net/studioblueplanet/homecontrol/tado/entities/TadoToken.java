@@ -96,8 +96,8 @@ public class TadoToken
         String[] split_string   = access_token.split("\\.");
         Decoder decoder         = Base64.getUrlDecoder();
         String payload          = new String(decoder.decode(split_string[1]));
-        Object object           =JSONValue.parse(payload);
-        JSONObject jsonObject   =(JSONObject)object;
+        Object object           = JSONValue.parse(payload);
+        JSONObject jsonObject   = (JSONObject)object;
         date=new Date((long)(jsonObject.get("exp"))*1000);
         return date;
     }
