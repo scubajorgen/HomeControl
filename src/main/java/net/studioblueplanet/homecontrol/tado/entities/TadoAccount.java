@@ -30,9 +30,9 @@ public class TadoAccount
     /** Account information from Tado */
     private TadoMe              tadoMe;
     
-    private final String        pwd         ="34be657de602799cf9dbcd2756e07f4c";
-    private final String        salt        ="e149b3adbffc265ad92cc78afde4f432";
-    private final TextEncryptor encryptor   = Encryptors.text(pwd, salt);
+    private final transient String        pwd         ="34be657de602799cf9dbcd2756e07f4c";
+    private final transient String        salt        ="e149b3adbffc265ad92cc78afde4f432";
+    private final transient TextEncryptor encryptor   = Encryptors.text(pwd, salt);
 
     public TadoAccount(String username, String password, TadoToken token)
     {
