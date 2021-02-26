@@ -149,5 +149,25 @@ public class TadoAccountTest
         result = instance.needsRefresh();
         assertEquals(true, result);
     }
+
+    /**
+     * Test of getPassword method, of class TadoAccount.
+     */
+    @Test
+    public void testGetPassword()
+    {
+        System.out.println("getPassword");
+        TadoAccount instance = new TadoAccount("username", "password", null);
+        assertNotEquals("password", instance.getEncryptedPassword());
+        assertEquals("password", instance.getPassword());
+        assertEquals(64, instance.getEncryptedPassword().length());
+        String encPwd=instance.getEncryptedPassword();
+        System.out.println("Encrypted password: "+encPwd);
+        
+        // Make sure the password can be decrypted using another instance
+        instance = new TadoAccount("username", "other", null);       
+        instance.setEncryptedPassword(encPwd);
+        assertEquals("password", instance.getPassword());
+    }
     
 }

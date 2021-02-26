@@ -7,6 +7,8 @@ package net.studioblueplanet.homecontrol.tado.entities;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
+import org.springframework.security.crypto.encrypt.Encryptors;
 
 /**
  *
@@ -20,20 +22,24 @@ public class TadoAccount
     /** Username, usually the e-mail */
     private String              username;
     /** Password */
-    private String              password;
+    private String              encryptedPassword;
     /** Tokens as retrieved from OAuth server from Tado */
     private TadoToken           token;
     /** Datetime of last token refresh */
     private Date                lastRefresh;
     /** Account information from Tado */
     private TadoMe              tadoMe;
+    
+    private final String        pwd         ="34be657de602799cf9dbcd2756e07f4c";
+    private final String        salt        ="e149b3adbffc265ad92cc78afde4f432";
+    private final TextEncryptor encryptor   = Encryptors.text(pwd, salt);
 
     public TadoAccount(String username, String password, TadoToken token)
     {
-        this.username   =username;
-        this.password   =password;
-        this.token      =token;
-        this.lastRefresh=new Date();
+        this.username           =username;
+        this.encryptedPassword  =encryptor.encrypt(password);
+        this.token              =token;
+        this.lastRefresh        =new Date();
     }
     
     public String getUsername()
@@ -46,14 +52,14 @@ public class TadoAccount
         this.username = username;
     }
 
-    public String getPassword()
+    public String getEncryptedPassword()
     {
-        return password;
+        return encryptedPassword;
     }
 
-    public void setPassword(String password)
+    public void setEncryptedPassword(String encryptedPassword)
     {
-        this.password = password;
+        this.encryptedPassword = encryptedPassword;
     }
 
     public TadoToken getToken()
@@ -125,5 +131,10 @@ public class TadoAccount
     public void setTadoMe(TadoMe tadoMe)
     {
         this.tadoMe = tadoMe;
+    }
+    
+    public String getPassword()
+    {
+        return encryptor.decrypt(encryptedPassword);
     }
 }
