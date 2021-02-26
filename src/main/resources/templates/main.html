@@ -128,7 +128,7 @@
           map.removeLayer(marker);
         }
         marker=L.marker([response.latitude, response.longitude]).addTo(map);
-        map.setView(new L.LatLng(response.latitude, response.longitude), 13)
+        map.setView(new L.LatLng(response.latitude, response.longitude), 16)
         map.invalidateSize();
       }
 
