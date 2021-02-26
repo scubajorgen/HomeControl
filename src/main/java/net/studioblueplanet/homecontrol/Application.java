@@ -26,7 +26,6 @@ import ma.glasnost.orika.impl.DefaultMapperFactory;
 @SpringBootApplication
 public class Application
 {
-    private static final String FRIENDACCOUNTSJSONFILE="friendAccounts.json";
     private static final Logger LOG = LoggerFactory.getLogger(Application.class);  
     
     public static void main(String[] args)
@@ -62,11 +61,5 @@ public class Application
     public MapperFactory mapperFactory()
     {
         return new DefaultMapperFactory.Builder().build();
-    }
-    
-    @Bean
-    public File friendAccountJsonFile()
-    {
-        return new File(FRIENDACCOUNTSJSONFILE);
     }
 }

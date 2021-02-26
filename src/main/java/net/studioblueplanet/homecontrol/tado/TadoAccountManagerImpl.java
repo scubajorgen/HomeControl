@@ -7,6 +7,7 @@ package net.studioblueplanet.homecontrol.tado;
 import java.util.ArrayList;
 import java.util.List;
 import net.studioblueplanet.homecontrol.tado.entities.TadoAccount;
+import net.studioblueplanet.homecontrol.data.Persistence;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -27,7 +28,10 @@ public class TadoAccountManagerImpl implements TadoAccountManager
     private static final Logger     LOG = LoggerFactory.getLogger(TadoAccountManagerImpl.class); 
     
     @Autowired
-    private RestTemplate            template;    
+    private RestTemplate            template;  
+    
+    @Autowired
+    private Persistence             persistence;
     
     public TadoAccountManagerImpl()
     {
@@ -99,6 +103,13 @@ public class TadoAccountManagerImpl implements TadoAccountManager
     @Override
     public void addAccount(TadoAccount account)
     {
+        List<TadoAccount> storedAccounts=persistence.restoreAccounts();
+        if (storedAccounts!=null)
+        {
+            storedAccounts.removeIf(ac -> ac.getUsername().equals(account.getUsername()));
+            storedAccounts.add(account);
+            persistence.storeAccounts(storedAccounts);
+        }
         accounts.add(account);
     }
     

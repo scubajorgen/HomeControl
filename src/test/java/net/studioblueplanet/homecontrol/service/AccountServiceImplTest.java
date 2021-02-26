@@ -5,7 +5,6 @@
  */
 package net.studioblueplanet.homecontrol.service;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +21,6 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.runner.RunWith;
@@ -52,16 +50,16 @@ public class AccountServiceImplTest
     }
     
     @Autowired
-    private AccountService  instance;
+    private AccountService      instance;
     
     @MockBean
-    private TadoInterface   tadoInterface;
+    private TadoInterface       tadoInterface;
     
     @MockBean
-    private TadoAccountManager   accountManager;
+    private TadoAccountManager  accountManager;
     
     @MockBean
-    private Persistence     persistence;
+    private Persistence         persistence;
     
     private TadoMe me;
     private TadoMe friend1;
