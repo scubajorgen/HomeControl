@@ -28,8 +28,10 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.runner.RunWith;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import static org.junit.Assert.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.web.client.RestTemplate;
@@ -76,6 +78,9 @@ public class TadoInterfaceImplTest
     
     private TadoAccount             meAccount;
     private TadoAccount             friendAccount;
+    
+    @Rule
+    public ExpectedException exceptionRule = ExpectedException.none();    
     
     public TadoInterfaceImplTest()
     {
@@ -348,15 +353,10 @@ public class TadoInterfaceImplTest
           .contentType(MediaType.APPLICATION_JSON)
           .body(body)
         );               
-        
-        // expect reauthorize TODO: is this right??
-        String authBody = new String(Files.readAllBytes((new File("src/test/resources/tadoToken.json")).toPath()));
-        mockServer.expect(ExpectedCount.once(), 
-                requestTo(new URI("https://auth.tado.com/oauth/token")))
-                .andExpect(method(HttpMethod.POST))
-                .andRespond(withStatus(HttpStatus.OK)          
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(authBody));      
+
+        exceptionRule.expect(TadoException.class);
+        exceptionRule.expectMessage("Client error: Unauthorized. Status code: 401");        
+
         TadoMe result = tadoInterface.tadoMe();
         assertNull(result);
         
@@ -412,6 +412,34 @@ public class TadoInterfaceImplTest
         mockServer.verify();
     }
 
+    /**
+     * Test of tadoHome method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testTadoHome_Exception() throws Exception
+    {
+        System.out.println("tadoHome");
+        authenticate();
+
+        mockServer.reset();
+        String body = new String(Files.readAllBytes((new File("src/test/resources/tadoHome.json")).toPath()));
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456")))
+          .andExpect(method(HttpMethod.GET))
+          .andRespond(withStatus(HttpStatus.NOT_FOUND)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(body)
+        );   
+        exceptionRule.expect(TadoException.class);
+        exceptionRule.expectMessage("Client error: Not Found. Status code: 404");
+            
+        TadoHome result = tadoInterface.tadoHome(123456);
+       
+        mockServer.verify();
+    }
+
+    
+    
     /**
      * Test of tadoZones method, of class TadoInterfaceImpl.
      */

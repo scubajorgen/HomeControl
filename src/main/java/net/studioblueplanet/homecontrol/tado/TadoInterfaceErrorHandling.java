@@ -38,10 +38,14 @@ public class TadoInterfaceErrorHandling implements ResponseErrorHandler
         if (httpResponse.getStatusCode().series() == HttpStatus.Series.SERVER_ERROR)
         {
             // handle SERVER_ERROR
+            throw new TadoException(TadoException.TadoExceptionType.SERVER_ERROR, httpResponse.getStatusText(), httpResponse.getStatusCode().value());
+
         } 
         else if (httpResponse.getStatusCode().series() == HttpStatus.Series.CLIENT_ERROR)
         {
+            throw new TadoException(TadoException.TadoExceptionType.CLIENT_ERROR, httpResponse.getStatusText(), httpResponse.getStatusCode().value());
             // handle CLIENT_ERROR
+/*
             if (httpResponse.getStatusCode() == HttpStatus.NOT_FOUND)
             {
                 throw new TadoNotFoundException();
@@ -54,6 +58,7 @@ public class TadoInterfaceErrorHandling implements ResponseErrorHandler
             {
                 throw new TadoBadRequestException();
             }
+*/
         }
     }
 }

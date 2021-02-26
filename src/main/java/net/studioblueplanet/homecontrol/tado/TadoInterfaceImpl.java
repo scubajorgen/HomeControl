@@ -190,13 +190,23 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
                     }
                 }
             }
-            catch (TadoBadRequestException e)
+            catch (TadoException e)
             {
-                LOG.error("Invalid credentials for user {}: {}", username, e.getMessage());
-            }
-            catch (TadoUnauthorizedException e)
-            {
-                LOG.error("Error requesting authentication token for user {}: {}", username, e.getMessage());
+                if (e.getType()==TadoException.TadoExceptionType.CLIENT_ERROR)
+                {
+                    if (e.getStatusCode()==400)
+                    {
+                        LOG.error("Invalid credentials for user {}: {}", username, e.getMessage());
+                    }
+                    else if (e.getStatusCode()==401)
+                    {
+                        LOG.error("Error requesting authentication token for user {}: {}", username, e.getMessage());
+                    }
+                    else
+                    {
+                        LOG.error("Unexpected Error requesting authentication token for user {}: {}", username, e.getMessage());
+                    }
+                }
             }
         }
         
@@ -238,19 +248,10 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
             HttpEntity entity               = new HttpEntity(headers);
 
             me=null;
-            try
-            {
-                ResponseEntity<TadoMe> response = template.exchange("https://my.tado.com/api/v2/me/", HttpMethod.GET, entity, TadoMe.class);        
-                me=response.getBody();
-                loggedInAccount.setTadoMe(me); // cache account information
-            }
-            catch (TadoUnauthorizedException e)
-            {
-                LOG.error("Error requesting Tado account info for user {}: {}", loggedInAccount.getUsername(), e.getMessage());
-                // reauthenticate
-                loggedInAccount.setToken(null);
-                authenticate(loggedInAccount.getUsername(), loggedInAccount.getPassword());
-            }
+            ResponseEntity<TadoMe> response = template.exchange("https://my.tado.com/api/v2/me/", HttpMethod.GET, entity, TadoMe.class);        
+            me=response.getBody();
+            loggedInAccount.setTadoMe(me); // cache account information
+
         }
         return me;
     }
