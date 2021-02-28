@@ -9,7 +9,7 @@ package net.studioblueplanet.homecontrol.service.entities;
  *
  * @author jorgen
  */
-public class HomeState
+public class Presence
 {
     /** Presence of the owner: AWAY or HOME */
     private String presence;
