@@ -14,7 +14,7 @@ import net.studioblueplanet.homecontrol.service.HomeService;
 import net.studioblueplanet.homecontrol.service.entities.Account;
 import net.studioblueplanet.homecontrol.service.entities.Home;
 import net.studioblueplanet.homecontrol.service.entities.HomeId;
-import net.studioblueplanet.homecontrol.service.entities.HomeState;
+import net.studioblueplanet.homecontrol.service.entities.Presence;
 import org.junit.runner.RunWith;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -146,13 +146,13 @@ public class HomeControllerTest
         account.setOwnHomes(homes);
         Mockito.when(this.accountService.getAccount()).thenReturn(account);
 
-        HomeState state=new HomeState();
+        Presence state=new Presence();
         state.setPresence("AWAY");
         state.setPresenceLocked(false);
         state.setShowHomePresenceSwitchButton(true);
         Mockito.when(this.homeService.getHomeState(homeId)).thenReturn(state);
         
-        mvc.perform(MockMvcRequestBuilders.get("/api/state/"+homeId).accept(MediaType.APPLICATION_JSON))
+        mvc.perform(MockMvcRequestBuilders.get("/api/home/"+homeId+"/presence").accept(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.presence").value("AWAY"))
         .andExpect(jsonPath("$.presenceLocked").value(false))
         .andExpect(jsonPath("$.showHomePresenceSwitchButton").value(true))

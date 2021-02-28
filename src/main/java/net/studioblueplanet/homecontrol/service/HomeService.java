@@ -8,9 +8,8 @@ package net.studioblueplanet.homecontrol.service;
 import java.util.List;
 
 import net.studioblueplanet.homecontrol.service.entities.Home;
-import net.studioblueplanet.homecontrol.service.entities.HomeState;
-import net.studioblueplanet.homecontrol.service.entities.Overlay;
 import net.studioblueplanet.homecontrol.service.entities.Presence;
+import net.studioblueplanet.homecontrol.service.entities.Overlay;
 import net.studioblueplanet.homecontrol.service.entities.Zone;
 
 /**
@@ -31,7 +30,7 @@ public interface HomeService
      * @param homeId ID of the home
      * @return The state of the home
      */
-    public HomeState    getHomeState(int homeId);
+    public Presence    getHomeState(int homeId);
     
     /**
      * Sets the presence of the home owner

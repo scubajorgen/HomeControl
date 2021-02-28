@@ -19,7 +19,7 @@ import net.studioblueplanet.homecontrol.service.AccountService;
 import net.studioblueplanet.homecontrol.service.HomeService;
 import net.studioblueplanet.homecontrol.service.entities.Account;
 import net.studioblueplanet.homecontrol.service.entities.Home;
-import net.studioblueplanet.homecontrol.service.entities.HomeState;
+import net.studioblueplanet.homecontrol.service.entities.Presence;
 import net.studioblueplanet.homecontrol.service.entities.Overlay;
 import net.studioblueplanet.homecontrol.service.entities.Presence;
 import net.studioblueplanet.homecontrol.service.entities.Zone;
@@ -70,13 +70,13 @@ public class HomeController
      * Example method. Simply echos the account information
      * @return Information about my account
      */
-    @RequestMapping("/state/{homeId}")
-    public ResponseEntity<HomeState> state(@PathVariable int homeId) 
+    @RequestMapping("/home/{homeId}/presence")
+    public ResponseEntity<Presence> state(@PathVariable int homeId) 
     {
         LOG.info("API: presence info requested");
 
-        ResponseEntity<HomeState> stateResponse;
-        HomeState                 state;
+        ResponseEntity<Presence> stateResponse;
+        Presence                 state;
 
         Account account=accountService.getAccount();
         if (account!=null)

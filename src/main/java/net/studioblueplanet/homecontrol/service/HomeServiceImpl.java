@@ -12,9 +12,8 @@ import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
 import net.studioblueplanet.homecontrol.service.entities.Account;
 import net.studioblueplanet.homecontrol.service.entities.Home;
-import net.studioblueplanet.homecontrol.service.entities.HomeState;
-import net.studioblueplanet.homecontrol.service.entities.Overlay;
 import net.studioblueplanet.homecontrol.service.entities.Presence;
+import net.studioblueplanet.homecontrol.service.entities.Overlay;
 import net.studioblueplanet.homecontrol.service.entities.Zone;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence.TadoHomePresence;
@@ -50,7 +49,7 @@ public class HomeServiceImpl implements HomeService
      */
     private void registerMappings()
     {
-        mapperFactory.classMap(TadoState.class, HomeState.class)
+        mapperFactory.classMap(TadoState.class, Presence.class)
                 .byDefault()
                 .register();
 
@@ -104,14 +103,14 @@ public class HomeServiceImpl implements HomeService
     }
     
     @Override
-    public HomeState getHomeState(int homeId)
+    public Presence getHomeState(int homeId)
     {
         TadoState state;
         
         state=tado.tadoState(homeId);
         
         MapperFacade mapper = mapperFactory.getMapperFacade();
-        return mapper.map(state, HomeState.class);
+        return mapper.map(state, Presence.class);
     }
 
     @Override

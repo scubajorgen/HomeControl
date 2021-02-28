@@ -5,14 +5,28 @@
  */
 package net.studioblueplanet.homecontrol.service.entities;
 
-import net.studioblueplanet.homecontrol.service.ServiceException;
 /**
  *
  * @author jorgen
  */
-public class Presence
+public class HomeState
 {
-    String presence;
+    /** Presence of the owner: AWAY or HOME */
+    private String presence;
+    /** ? */
+    private boolean presenceLocked;
+    /** Show the presence switch button - optional */
+    private boolean showHomePresenceSwitchButton;
+
+    public boolean isPresenceLocked()
+    {
+        return presenceLocked;
+    }
+
+    public void setPresenceLocked(boolean presenceLocked)
+    {
+        this.presenceLocked = presenceLocked;
+    }
 
     public String getPresence()
     {
@@ -21,10 +35,17 @@ public class Presence
 
     public void setPresence(String presence)
     {
-        if (!presence.equals("AWAY") && !presence.equals("HOME"))
-        {
-            throw new ServiceException("Illegal presence value "+presence+". Please use AWAY or HOME");
-        }
         this.presence = presence;
     }
+
+    public boolean isShowHomePresenceSwitchButton()
+    {
+        return showHomePresenceSwitchButton;
+    }
+
+    public void setShowHomePresenceSwitchButton(boolean showHomePresenceSwitchButton)
+    {
+        this.showHomePresenceSwitchButton = showHomePresenceSwitchButton;
+    }
+    
 }
