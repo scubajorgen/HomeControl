@@ -21,9 +21,6 @@ import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZoneState;
-import net.studioblueplanet.homecontrol.tado.TadoInterface.State;
-import net.studioblueplanet.homecontrol.tado.TadoInterface.Termination;
-import net.studioblueplanet.homecontrol.tado.TadoInterface.ZoneType;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -693,7 +690,7 @@ public class TadoInterfaceImplTest
           .body(responseBody)
         );          
         
-        TadoOverlay response=tadoInterface.setTadoOverlay(123456, 1, ZoneType.HEATING, State.ON, 25.0, Termination.TIMER, 1800);
+        TadoOverlay response=tadoInterface.setTadoOverlay(123456, 1, "HEATING", "ON", 25.0, "TIMER", 1800);
         
         assertEquals("MANUAL", response.getType());
         assertEquals("HEATING", response.getSetting().getType());
@@ -729,7 +726,7 @@ public class TadoInterfaceImplTest
           .body(responseBody)
         );          
         
-        TadoOverlay response=tadoInterface.setTadoOverlay(123456, 1, ZoneType.HEATING, State.ON, 17.0, TadoInterface.Termination.INFINITE, 0);
+        TadoOverlay response=tadoInterface.setTadoOverlay(123456, 1, "HEATING", "ON", 17.0, "MANUAL", 0);
         
         assertEquals("MANUAL", response.getType());
         assertEquals("HEATING", response.getSetting().getType());
@@ -765,7 +762,7 @@ public class TadoInterfaceImplTest
           .body(responseBody)
         );          
         
-        TadoOverlay response=tadoInterface.setTadoOverlay(123456, 1, ZoneType.HEATING, State.ON, 16.0, TadoInterface.Termination.NEXTTIMEBLOCK, 1800);
+        TadoOverlay response=tadoInterface.setTadoOverlay(123456, 1, "HEATING", "ON", 16.0, "NEXT_TIME_BLOCK", 1800);
         
         assertEquals("MANUAL", response.getType());
         assertEquals("HEATING", response.getSetting().getType());
@@ -801,7 +798,7 @@ public class TadoInterfaceImplTest
           .body(responseBody)
         );          
         
-        TadoOverlay response=tadoInterface.setTadoOverlay(123456, 2, ZoneType.HOTWATER, State.OFF, 0, TadoInterface.Termination.NEXTTIMEBLOCK, 0);
+        TadoOverlay response=tadoInterface.setTadoOverlay(123456, 2, "HOT_WATER", "OFF", 0, "NEXT_TIME_BLOCK", 0);
         
         assertEquals("MANUAL", response.getType());
         assertEquals("HOT_WATER", response.getSetting().getType());
@@ -836,7 +833,7 @@ public class TadoInterfaceImplTest
           .body(responseBody)
         );          
         
-        TadoOverlay response=tadoInterface.setTadoOverlay(123456, 2, ZoneType.HOTWATER, State.ON, 50.0, TadoInterface.Termination.INFINITE, 0);
+        TadoOverlay response=tadoInterface.setTadoOverlay(123456, 2, "HOT_WATER", "ON", 50.0, "MANUAL", 0);
         
         assertEquals("MANUAL", response.getType());
         assertEquals("HOT_WATER", response.getSetting().getType());

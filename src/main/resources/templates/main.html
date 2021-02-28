@@ -20,7 +20,8 @@
     <script>
       var currentHome;
       var zones;
-      var zoneIndex;
+      var theHomeId;
+      var theZoneIndex;
       var map;
       var marker=null;
       /***********************************************************************************************\
@@ -168,12 +169,14 @@
         html = '<table class="table">';
         html += '<tr>';
         html += '<td>Name</td>';
-        html += '<td>Type</td>';
+        html += '<td>Zone</td>';
         html += '<td>Power</td>';
         html += '<td>Temperature</td>';
         html += '<td>Temperature Setpoint</td>';
         html += '<td>Humidity</td>';
         html += '<td>Presence</td>';
+        html += '<td>Manual</td>';
+        html += '<td>Heating</td>';
         html += '</tr>';
         for (i = 0; i < response.length; i++)
         {
@@ -206,6 +209,28 @@
             html += '<td></td>';
           }
           html += '<td>' + response[i].tadoMode + '</td>';
+
+          if (response[i].overlayType!=null)
+          {
+            html += '<td>';
+            html += '<a href="javascript:deleteZoneOverlayExecute('+response[i].id+')" role="button" class="btn-sm btn-outline-warning btn-block"><i class="fas fa-sign-out-alt"></i>Manual</a>';
+            html += '</td>';
+          }
+          else
+          {
+            html += '<td>Auto</td>';
+          }
+
+          if (response[i].heatingPower!=null)
+          {
+            html += '<td>' + response[i].heatingPower + ' %</td>';
+          }
+          else
+          {
+            html += '<td>Off</td>';
+          }
+
+
           html += '<td><a href="javascript:editZone(' + i + ')" role="button" class="btn btn-outline-warning btn-block"><i class="fas fa-edit"></i> Edit</a></td>';
           html += '</tr>';
         }
@@ -220,12 +245,16 @@
       \***********************************************************************************************/ 
       function loadZoneInfo(homeId, homeName)
       {
+        theHomeId=homeId;
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function ()
         {
           if (this.readyState == 4 && this.status == 200)
           {
-            $('#zoneInfoTitle').html('<H3>Zones for <i>'+homeName+'</i></H3>');
+            if (homeName!=null)
+            {
+              $('#zoneInfoTitle').html('<H3>Zones for <i>'+homeName+'</i></H3>');
+            }
             displayZoneInfo(JSON.parse(this.responseText));
           }
         };
@@ -239,11 +268,21 @@
       \***********************************************************************************************/ 
       function editZone(zoneIndex)
       {
+        theZoneIndex=zoneIndex;
         $('#zoneEditTitle').html("Edit zone "+zones[zoneIndex].name);
-        $('#zoneEditTemperature').val(zones[zoneIndex].temperatureSetpoint);
+        if (zones[zoneIndex].temperatureSetpoint!=null)
+        {
+          $('#zoneEditTemperature').val(zones[zoneIndex].temperatureSetpoint);
+        }
+        else
+        {
+          $('#zoneEditTemperature').val(20.0);
+        }
+        $('#zoneEditPower').val(zones[zoneIndex].power);
         $('#zoneEditTermination').val("TIMER");
         $('#zoneEditTimer').val(30);
         $('#zoneEditTemperature').attr('step', zones[zoneIndex].temperaturePrecision);
+        $('#zoneEditPower').val(zones[zoneIndex].power);
 
         $('#zoneEditModal').modal("show");
       }
@@ -253,7 +292,51 @@
       \***********************************************************************************************/ 
       function editZoneExecute()
       {
-        alert('Go');
+        var power       =$('#zoneEditPower').val();
+        var temperature =$('#zoneEditTemperature').val();
+        var termination =$('#zoneEditTermination').val();
+        var timer       =$('#zoneEditTimer').val()*60; // minutes to seconds
+        var type        =zones[theZoneIndex].type;
+        var payload={type: type, power: power, temperatureSetpoint: temperature, termination: termination, timer: timer};
+
+        var xhttp       = new XMLHttpRequest();
+        var header      = document.querySelector("[name='_csrf_header'][content]").content
+        var headerValue = document.querySelector("[name='_csrf'][content]").content
+
+        xhttp.onreadystatechange = function() 
+        {
+            if (this.readyState == 4 && this.status == 200) 
+            {
+              $('#zoneEditModal').modal("hide");
+              loadZoneInfo(theHomeId, null);
+            }
+        };
+        xhttp.open("PUT", "/api/home/"+theHomeId+"/zone/"+zones[theZoneIndex].id+'/overlay ', true);
+        xhttp.setRequestHeader("Content-type", "application/json");
+        xhttp.setRequestHeader(header, headerValue);
+        xhttp.send(JSON.stringify(payload));  
+      }
+
+      /***********************************************************************************************\
+      *
+      \***********************************************************************************************/ 
+      function deleteZoneOverlayExecute(zoneId)
+      {
+        var xhttp       = new XMLHttpRequest();
+        var header      = document.querySelector("[name='_csrf_header'][content]").content
+        var headerValue = document.querySelector("[name='_csrf'][content]").content
+
+        xhttp.onreadystatechange = function() 
+        {
+            if (this.readyState == 4 && this.status == 200) 
+            {
+              loadZoneInfo(theHomeId, null);
+            }
+        };
+        xhttp.open("DELETE", "/api/home/"+theHomeId+"/zone/"+zoneId+'/overlay', true);
+        xhttp.setRequestHeader("Content-type", "application/json");
+        xhttp.setRequestHeader(header, headerValue);
+        xhttp.send("");  
       }
 
       /***********************************************************************************************\
@@ -265,14 +348,11 @@
         if (power=='ON')
         {
           $('#zoneEditTemperature').prop( "disabled", false );
-          $('#zoneEditTermination').prop( "disabled", false );
           handleTermination();
         }
         else
         {
           $('#zoneEditTemperature').prop( "disabled", true );
-          $('#zoneEditTermination').prop( "disabled", true );
-          $('#zoneEditTimer').prop( "disabled", true );
         }
       }
 
@@ -324,9 +404,7 @@
                 power: "ON",
                 temperature: 20.15,
                 temperatureSetpoint: 23,
-                temperaturePrecision: 1.0,
-                termination: 'INFINITE',
-                timer: 1860}];
+                temperaturePrecision: 1.0,}];
         editZone(0);
       }    
     </script>
@@ -406,14 +484,14 @@
 
             <div class="form-group">
               <label for="zoneEditTemperature">Temperature</label>
-              <input type="number" class="form-control" id="zoneEditTemperature" value="20.1" step="0.1">
+              <input type="number" class="form-control" id="zoneEditTemperature" value="20" step="0.1">
             </div> 
 
             <div class="form-group">
               <label for="zoneEditTermination">Termination</label>
               <select class="form-control" id="zoneEditTermination">
-                <option value="INFINITE">Manual</option>
-                <option value="NEXTTIMEBLOCK">Till next time block</option>
+                <option value="MANUAL">Manual</option>
+                <option value="NEXT_TIME_BLOCK">Till next time block</option>
                 <option value="TIMER">Timer</option>
               </select>
             </div>

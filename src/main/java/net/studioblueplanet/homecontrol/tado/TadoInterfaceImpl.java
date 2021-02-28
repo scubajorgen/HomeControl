@@ -41,9 +41,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-
-
-
 /**
  *
  * @author jorgen.van.der.velde
@@ -56,7 +53,6 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
 
     @Autowired
     private RestTemplate            template;
-
 
     // Guarded data
     private final Timer             timer;
@@ -130,7 +126,8 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
                 }        
             }
         }
-    }   
+    }  
+    
     /**
      * Authenticates by requesting the access token. 
      * @param username Username
@@ -171,7 +168,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
             requestBody.add("password", password);
             requestBody.add("client_secret", "wZaRN7rpjn3FoNyF5IFuxg9uMzYJcvOoQ8QWiIqS3hfk6gLhVlG57j5YNoZL2Rtc");
 
-            HttpEntity formEntity = new HttpEntity<MultiValueMap<String, String>>(requestBody, headers);
+            HttpEntity formEntity = new HttpEntity<>(requestBody, headers);
             try
             {
                 localToken = template.postForObject("https://auth.tado.com/oauth/token", formEntity, TadoToken.class);
@@ -361,7 +358,8 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
         return response.getBody();
     }
     
-    public TadoOverlay setTadoOverlay(int homeId, int zoneId, ZoneType type, State state, double temperature, Termination termination, int timerSeconds)
+    @Override
+    public TadoOverlay setTadoOverlay(int homeId, int zoneId, String type, String power, double temperature, String termination, int timerSeconds)
     {
         TadoAccount account=accountManager.findAccount(homeId);
 
@@ -371,40 +369,55 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
         temp.setCelsius(temperature);
         temp.setFahrenheit((temperature * 9.0/5.0) + 32.0);
         TadoSetting setting=new TadoSetting();
-        switch (state)
+
+
+        setting.setPower(power);
+        if (power.equals("ON"))
         {
-            case OFF:
-                setting.setPower("OFF");
-                break;
-            case ON:
-                setting.setPower("ON");
-                setting.setTemperature(temp);
-                break;
+           setting.setTemperature(temp);            
         }
-        switch (type)
+        else if (power.equals("OFF"))
         {
-            case HEATING:
-                setting.setType("HEATING");
-                break;
-            case HOTWATER:
-                setting.setType("HOT_WATER");
-                break;
+            
         }
+        else
+        {
+            LOG.error("Error invalid value for overlay setting for power: {}", power);
+        }
+
+        setting.setType(type);
+        if (type.equals("HEATING"))
+        {
+            
+        }
+        else if (type.equals("HOT_WATER"))
+        {
+            
+        }
+        else
+        {
+            LOG.error("Error invalid value for overlay setting for type: {}", type);
+        }
+        
         TadoTermination term=new TadoTermination();
         TadoOverlay overlay=new TadoOverlay();
-        switch(termination)
+        term.setTypeSkillBasedApp(termination);
+
+        if (termination.equals("TIMER"))
         {
-            case TIMER:
-                term.setTypeSkillBasedApp("TIMER");
-                term.setDurationInSeconds(timerSeconds);
-                break;
-            case NEXTTIMEBLOCK:
-                term.setTypeSkillBasedApp("NEXT_TIME_BLOCK");
-                break;
-            case INFINITE:
-                term.setTypeSkillBasedApp("MANUAL");
-                overlay.setType("MANUAL");
-                break;
+            term.setDurationInSeconds(timerSeconds);
+        }
+        else if (termination.equals("NEXT_TIME_BLOCK"))
+        {
+            
+        }
+        else if (termination.equals("MANUAL"))
+        {
+            overlay.setType("MANUAL");
+        }
+        else
+        {
+            LOG.error("Error invalid value for overlay setting for termination: {}", termination);
         }
         overlay.setSetting(setting);
         overlay.setTermination(term);
@@ -422,8 +435,8 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
         LOG.info("Delete Tado OVERLAY for user {}, home {}, zone {}", account.getUsername(), homeId, zoneId);
         HttpHeaders headers             = new HttpHeaders();
         headers.setBearerAuth(account.getToken().getAccess_token());
-        HttpEntity<TadoPresence> entity        = new HttpEntity<>(headers);
-        ResponseEntity<String> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/zone/"+zoneId, 
+        HttpEntity entity = new HttpEntity(headers);
+        ResponseEntity<String> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/zones/"+zoneId+"/overlay", 
                                                             HttpMethod.DELETE, entity, String.class);          
     }
     

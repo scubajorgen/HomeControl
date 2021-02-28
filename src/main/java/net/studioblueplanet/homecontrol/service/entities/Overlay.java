@@ -11,33 +11,11 @@ package net.studioblueplanet.homecontrol.service.entities;
  */
 public class Overlay
 {
-    private int                     homeId;
-    private int                     zoneId;
     private String                  type;
     private String                  power;
     private Double                  temperatureSetpoint;    
     private String                  termination;
     private int                     timer;
-
-    public int getHomeId()
-    {
-        return homeId;
-    }
-
-    public void setHomeId(int homeId)
-    {
-        this.homeId = homeId;
-    }
-
-    public int getZoneId()
-    {
-        return zoneId;
-    }
-
-    public void setZoneId(int zoneId)
-    {
-        this.zoneId = zoneId;
-    }
 
     public String getPower()
     {
@@ -77,5 +55,15 @@ public class Overlay
     public void setTimer(int timer)
     {
         this.timer = timer;
+    }
+
+    public String getType()
+    {
+        return type;
+    }
+
+    public void setType(String type)
+    {
+        this.type = type;
     }
 }

@@ -81,6 +81,7 @@ public class HomeServiceImpl implements HomeService
                 .field("sensorDataPoints.insideTemperature.celsius", "temperature")
                 .field("sensorDataPoints.insideTemperature.precision.celsius", "temperaturePrecision")
                 .field("sensorDataPoints.humidity.percentage", "humidity")
+                .field("activityDataPoints.heatingPower.percentage", "heatingPower")
                 .register();
     }
     
@@ -150,11 +151,15 @@ public class HomeServiceImpl implements HomeService
         return zones;
     }
     
-    public void setOverlay(Overlay overlay)
+    @Override
+    public void setOverlay(int homeId, int zoneId, Overlay overlay)
     {
-        int homeId=overlay.getHomeId();
-        int zoneId=overlay.getZoneId();
-        
-//        tado.setTadoOverlay(overlay.getHomeId(), overlay.getZoneId(), TadoInterface.ZoneType.HEATING, overlay.getPower(), 0, TadoInterface.Termination.INFINITE, 0);
+        tado.setTadoOverlay(homeId, zoneId, overlay.getType(), overlay.getPower(), overlay.getTemperatureSetpoint(), overlay.getTermination(), overlay.getTimer());
+    }
+    
+    @Override
+    public void deleteOverlay(int homeId, int zoneId)
+    {
+        tado.deleteTadoOverlay(homeId, zoneId);
     }
 }

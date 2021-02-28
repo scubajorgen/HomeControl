@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 import net.studioblueplanet.homecontrol.service.AccountService;
 import net.studioblueplanet.homecontrol.service.HomeService;
@@ -21,6 +22,8 @@ import net.studioblueplanet.homecontrol.service.entities.Home;
 import net.studioblueplanet.homecontrol.service.entities.HomeState;
 import net.studioblueplanet.homecontrol.service.entities.Overlay;
 import net.studioblueplanet.homecontrol.service.entities.Zone;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.http.HttpStatus;
 
@@ -32,6 +35,8 @@ import org.springframework.http.HttpStatus;
 @RequestMapping("/api")
 public class HomeController 
 {
+    private static final Logger     LOG = LoggerFactory.getLogger(HomeController.class);
+    
     @Autowired
     AccountService accountService;
 
@@ -45,6 +50,7 @@ public class HomeController
     @RequestMapping("/account")
     public ResponseEntity<Account> account() 
     {
+        LOG.info("API: account info requested");
         ResponseEntity<Account> accountResponse;
 
         Account account=accountService.getAccount();
@@ -66,6 +72,8 @@ public class HomeController
     @RequestMapping("/state/{homeId}")
     public ResponseEntity<HomeState> state(@PathVariable int homeId) 
     {
+        LOG.info("API: presence info requested");
+
         ResponseEntity<HomeState> stateResponse;
         HomeState                 state;
 
@@ -85,6 +93,7 @@ public class HomeController
     @PutMapping("/home/{homeId}/presence")
     public ResponseEntity<String> presence(@PathVariable int homeId, @RequestBody String presence) 
     {
+        LOG.info("API: presence info set");
         ResponseEntity response;
         Account account=accountService.getAccount();
         if (account!=null)
@@ -103,6 +112,7 @@ public class HomeController
     @RequestMapping("/home/{homeId}")
     public ResponseEntity<Home> home(@PathVariable int homeId) 
     {
+        LOG.info("API: home info requested");
         ResponseEntity<Home>    homeResponse;
         Home                    home;
 
@@ -123,6 +133,7 @@ public class HomeController
     @RequestMapping("/home/{homeId}/zones")
     public ResponseEntity<List<Zone>> zones(@PathVariable int homeId) 
     {
+        LOG.info("API: zone info requested");
         ResponseEntity<List<Zone>>  zonesResponse;
         List<Zone>                  zones;
 
@@ -139,15 +150,33 @@ public class HomeController
         return zonesResponse;
     }
     
-    @PutMapping("/overlay")
-    public ResponseEntity<String> overlay(@RequestBody Overlay overlay) 
+    @PutMapping("home/{homeId}/zone/{zoneId}/overlay")
+    public ResponseEntity<String> overlay(@PathVariable int homeId, @PathVariable int zoneId, @RequestBody Overlay overlay) 
     {
+        LOG.info("API: overlay set for home {}, zone {}", homeId, zoneId);
         ResponseEntity response;
         Account account=accountService.getAccount();
         if (account!=null)
-
         {
-            
+            homeService.setOverlay(homeId, zoneId, overlay);
+            response=new ResponseEntity(HttpStatus.OK);
+        }
+        else
+        {
+            response=new ResponseEntity(HttpStatus.PRECONDITION_FAILED);
+        }
+        return response;
+    }    
+    
+    @DeleteMapping("home/{homeId}/zone/{zoneId}/overlay")
+    public ResponseEntity<String> deleteOverlay(@PathVariable int homeId, @PathVariable int zoneId) 
+    {
+        LOG.info("API: overlay deleted for home {}, zone {}", homeId, zoneId);
+        ResponseEntity response;
+        Account account=accountService.getAccount();
+        if (account!=null)
+        {
+            homeService.deleteOverlay(homeId, zoneId);
             response=new ResponseEntity(HttpStatus.OK);
         }
         else

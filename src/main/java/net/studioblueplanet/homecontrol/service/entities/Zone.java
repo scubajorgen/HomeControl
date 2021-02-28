@@ -23,6 +23,8 @@ public class Zone
     private Double                  temperature;
     private Double                  temperaturePrecision;
     private Double                  humidity;
+    private Double                  heatingPower;
+    private String                  overlayType;
     
     public int getId()
     {
@@ -112,5 +114,25 @@ public class Zone
     public void setHumidity(Double humidity)
     {
         this.humidity = humidity;
+    }
+
+    public Double getHeatingPower()
+    {
+        return heatingPower;
+    }
+
+    public void setHeatingPower(Double heatingPower)
+    {
+        this.heatingPower = heatingPower;
+    }
+
+    public String getOverlayType()
+    {
+        return overlayType;
+    }
+
+    public void setOverlayType(String overlayType)
+    {
+        this.overlayType = overlayType;
     }
 }
