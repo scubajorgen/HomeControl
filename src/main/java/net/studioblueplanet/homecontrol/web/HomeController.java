@@ -21,6 +21,7 @@ import net.studioblueplanet.homecontrol.service.entities.Account;
 import net.studioblueplanet.homecontrol.service.entities.Home;
 import net.studioblueplanet.homecontrol.service.entities.HomeState;
 import net.studioblueplanet.homecontrol.service.entities.Overlay;
+import net.studioblueplanet.homecontrol.service.entities.Presence;
 import net.studioblueplanet.homecontrol.service.entities.Zone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,7 +92,7 @@ public class HomeController
     }
     
     @PutMapping("/home/{homeId}/presence")
-    public ResponseEntity<String> presence(@PathVariable int homeId, @RequestBody String presence) 
+    public ResponseEntity<String> presence(@PathVariable int homeId, @RequestBody Presence presence) 
     {
         LOG.info("API: presence info set");
         ResponseEntity response;

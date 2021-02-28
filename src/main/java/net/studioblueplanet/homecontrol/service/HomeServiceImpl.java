@@ -14,6 +14,7 @@ import net.studioblueplanet.homecontrol.service.entities.Account;
 import net.studioblueplanet.homecontrol.service.entities.Home;
 import net.studioblueplanet.homecontrol.service.entities.HomeState;
 import net.studioblueplanet.homecontrol.service.entities.Overlay;
+import net.studioblueplanet.homecontrol.service.entities.Presence;
 import net.studioblueplanet.homecontrol.service.entities.Zone;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence.TadoHomePresence;
@@ -82,6 +83,7 @@ public class HomeServiceImpl implements HomeService
                 .field("sensorDataPoints.insideTemperature.precision.celsius", "temperaturePrecision")
                 .field("sensorDataPoints.humidity.percentage", "humidity")
                 .field("activityDataPoints.heatingPower.percentage", "heatingPower")
+                .field("overlay.termination.typeSkillBasedApp", "overlayTermination")
                 .register();
     }
     
@@ -113,9 +115,9 @@ public class HomeServiceImpl implements HomeService
     }
 
     @Override
-    public void setPresence(int homeId, String presence)
+    public void setPresence(int homeId, Presence presence)
     {
-        if (presence.equals("AWAY"))
+        if (presence.getPresence().equals("AWAY"))
         {
             tado.setTadoPresence(homeId, TadoHomePresence.AWAY);
         }

@@ -25,6 +25,7 @@ public class Zone
     private Double                  humidity;
     private Double                  heatingPower;
     private String                  overlayType;
+    private String                  overlayTermination;
     
     public int getId()
     {
@@ -134,5 +135,15 @@ public class Zone
     public void setOverlayType(String overlayType)
     {
         this.overlayType = overlayType;
+    }
+
+    public String getOverlayTermination()
+    {
+        return overlayTermination;
+    }
+
+    public void setOverlayTermination(String overlayTermination)
+    {
+        this.overlayTermination = overlayTermination;
     }
 }

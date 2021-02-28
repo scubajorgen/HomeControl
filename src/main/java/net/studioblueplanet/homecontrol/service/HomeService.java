@@ -7,10 +7,10 @@ package net.studioblueplanet.homecontrol.service;
 
 import java.util.List;
 
-import net.studioblueplanet.homecontrol.service.entities.Account;
 import net.studioblueplanet.homecontrol.service.entities.Home;
 import net.studioblueplanet.homecontrol.service.entities.HomeState;
 import net.studioblueplanet.homecontrol.service.entities.Overlay;
+import net.studioblueplanet.homecontrol.service.entities.Presence;
 import net.studioblueplanet.homecontrol.service.entities.Zone;
 
 /**
@@ -36,9 +36,9 @@ public interface HomeService
     /**
      * Sets the presence of the home owner
      * @param homeId ID of the home
-     * @param presence Presence as String: "HOME" or "AWAY"
+     * @param presence Presence: "HOME" or "AWAY"
      */
-    public void         setPresence(int homeId, String presence);
+    public void         setPresence(int homeId, Presence presence);
     
     /**
      * Get info about all zones

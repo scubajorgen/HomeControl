@@ -182,7 +182,8 @@ public class HomeControllerTest
         theHome.setName("HQ");
         Mockito.when(this.homeService.getHome(homeId)).thenReturn(theHome);
         
-         mvc.perform(MockMvcRequestBuilders.get("/api/home/"+homeId).accept(MediaType.APPLICATION_JSON))
+         mvc.perform(MockMvcRequestBuilders.get("/api/home/"+homeId)
+        .accept(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.id").value(homeId))
         .andExpect(jsonPath("$.name").value("HQ"))
         .andDo(print())
@@ -199,7 +200,8 @@ public class HomeControllerTest
 
         Mockito.when(this.accountService.getAccount()).thenReturn(null);
         mvc.perform(MockMvcRequestBuilders.put("/api/home/12345/presence")
-        .content("AWAY")
+        .content("{\"presence\": \"AWAY\"}")
+        .contentType(MediaType.APPLICATION_JSON)
         .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isPreconditionFailed())
         .andDo(print())
@@ -207,7 +209,8 @@ public class HomeControllerTest
 
         Mockito.when(this.accountService.getAccount()).thenReturn(account);
         mvc.perform(MockMvcRequestBuilders.put("/api/home/12345/presence")
-        .content("AWAY")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content("{\"presence\": \"AWAY\"}")
         .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
         .andDo(print())

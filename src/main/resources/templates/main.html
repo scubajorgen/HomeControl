@@ -107,7 +107,7 @@
         html+='Temperature unit: '+response.temperatureUnit+'<br>';
         html+='Away radius: '+response.awayRadiusInMeters+' m<br>';
         html+='Location: ('+response.latitude+', '+response.longitude+')<br>';
-        html+='Presence: '+response.presence+'<br>';
+        html+='Presence: <b>'+response.presence+'</b><br>';
         html+='Contact: '+response.contact+'<br>';
         html+='Address: '+response.addressLine1+'<br>';
         if (response.addressLine2!=null)
@@ -175,8 +175,8 @@
         html += '<td>Temperature Setpoint</td>';
         html += '<td>Humidity</td>';
         html += '<td>Presence</td>';
-        html += '<td>Manual</td>';
         html += '<td>Heating</td>';
+        html += '<td>Manual/Auto</td>';
         html += '</tr>';
         for (i = 0; i < response.length; i++)
         {
@@ -210,17 +210,6 @@
           }
           html += '<td>' + response[i].tadoMode + '</td>';
 
-          if (response[i].overlayType!=null)
-          {
-            html += '<td>';
-            html += '<a href="javascript:deleteZoneOverlayExecute('+response[i].id+')" role="button" class="btn-sm btn-outline-warning btn-block"><i class="fas fa-sign-out-alt"></i>Manual</a>';
-            html += '</td>';
-          }
-          else
-          {
-            html += '<td>Auto</td>';
-          }
-
           if (response[i].heatingPower!=null)
           {
             html += '<td>' + response[i].heatingPower + ' %</td>';
@@ -230,8 +219,20 @@
             html += '<td>Off</td>';
           }
 
+          if (response[i].overlayType!=null)
+          {
+            html += '<td>';
+            html += '<a href="javascript:deleteZoneOverlayExecute('+response[i].id+
+                    ')" role="button" class="btn-sm btn-outline-warning btn-block"><i class="fas fa-sign-out-alt"></i>Manual ('+response[i].overlayTermination+')</a>';
+            html += '</td>';
+          }
+          else
+          {
+            html += '<td>';
+            html += '<a href="javascript:editZone(' + i + ')" role="button" class="btn-sm btn-outline-warning btn-block"><i class="fas fa-edit"></i> Auto</a>';
+            html += '</td>';
+          }
 
-          html += '<td><a href="javascript:editZone(' + i + ')" role="button" class="btn btn-outline-warning btn-block"><i class="fas fa-edit"></i> Edit</a></td>';
           html += '</tr>';
         }
         $('#zoneInfo').html(html);
@@ -389,9 +390,9 @@
             }
         };
         xhttp.open("PUT", "/api/home/"+currentHome.id+"/presence", true);
-        xhttp.setRequestHeader("Content-type", "text/plain");
+        xhttp.setRequestHeader("Content-type", "application/json");
         xhttp.setRequestHeader(header, headerValue);
-        xhttp.send(presence);        
+        xhttp.send(JSON.stringify({presence: presence}));        
       }
 
       /***********************************************************************************************\
@@ -490,7 +491,7 @@
             <div class="form-group">
               <label for="zoneEditTermination">Termination</label>
               <select class="form-control" id="zoneEditTermination">
-                <option value="MANUAL">Manual</option>
+                <option value="MANUAL">Till Kingdom come...</option>
                 <option value="NEXT_TIME_BLOCK">Till next time block</option>
                 <option value="TIMER">Timer</option>
               </select>
