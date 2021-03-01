@@ -80,10 +80,17 @@
         var xhttp = new XMLHttpRequest();
           xhttp.onreadystatechange = function() 
           {
-              if (this.readyState == 4 && this.status == 200) 
+            if (this.readyState == 4) 
+            {
+              if (this.status == 200)
               {
                 displayAccountInfo(JSON.parse(this.responseText));
               }
+              else
+              {
+                handleError(this.responseText);
+              }
+            }
           };
           xhttp.open("GET", "/api/account", true);
           xhttp.setRequestHeader("Content-type", "application/json");
@@ -259,13 +266,24 @@
         {
           if (this.readyState == 4 && this.status == 200)
           {
-            if (homeName!=null)
-            {
-              $('#zoneInfoTitle').html('<H3>Zones for <i>'+homeName+'</i></H3>');
-            }
-            displayZoneInfo(JSON.parse(this.responseText));
+
           }
-        };
+          if (this.readyState == 4) 
+          {
+              if (this.status == 200)
+              {
+                if (homeName!=null)
+                {
+                  $('#zoneInfoTitle').html('<H3>Zones for <i>'+homeName+'</i></H3>');
+                }
+                displayZoneInfo(JSON.parse(this.responseText));
+              }
+              else
+              {
+                handleError(this.responseText);
+              }
+            }
+          };
         xhttp.open("GET", "/api/home/"+homeId+"/zones", true);
         xhttp.setRequestHeader("Content-type", "application/json");
         xhttp.send("");
@@ -313,10 +331,17 @@
 
         xhttp.onreadystatechange = function() 
         {
-            if (this.readyState == 4 && this.status == 200) 
+            if (this.readyState == 4) 
             {
-              $('#zoneEditModal').modal("hide");
-              loadZoneInfo(theHomeId, null);
+              if (this.status == 200)
+              {
+                $('#zoneEditModal').modal("hide");
+                loadZoneInfo(theHomeId, null);
+              }
+              else
+              {
+                handleError(this.responseText);
+              }
             }
         };
         xhttp.open("PUT", "/api/home/"+theHomeId+"/zone/"+zones[theZoneIndex].id+'/overlay ', true);
@@ -336,10 +361,17 @@
 
         xhttp.onreadystatechange = function() 
         {
-            if (this.readyState == 4 && this.status == 200) 
+          if (this.readyState == 4) 
+          {
+            if (this.status == 200)
             {
               loadZoneInfo(theHomeId, null);
             }
+            else
+            {
+              handleError(this.responseText);
+            }
+          }
         };
         xhttp.open("DELETE", "/api/home/"+theHomeId+"/zone/"+zoneId+'/overlay', true);
         xhttp.setRequestHeader("Content-type", "application/json");
@@ -391,10 +423,17 @@
 
         xhttp.onreadystatechange = function() 
         {
-            if (this.readyState == 4 && this.status == 200) 
+          if (this.readyState == 4) 
+          {
+            if (this.status == 200)
             {
               loadHomeInfo(currentHome.id, currentHome.name);
             }
+            else
+            {
+              handleError(this.responseText);
+            }
+          }
         };
         xhttp.open("PUT", "/api/home/"+currentHome.id+"/presence", true);
         xhttp.setRequestHeader("Content-type", "application/json");
@@ -408,7 +447,6 @@
       function handleError(response)
       {
         error=JSON.parse(response);
-        alert(response);
         $('#errorTimestamp').html(error.timestamp);
         $('#errorStatus').html(error.status);
         $('#errorMessage').html('<b>'+error.message+'</b>');
