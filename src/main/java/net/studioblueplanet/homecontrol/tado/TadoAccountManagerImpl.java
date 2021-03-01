@@ -36,6 +36,7 @@ public class TadoAccountManagerImpl implements TadoAccountManager
     public TadoAccountManagerImpl()
     {
         accounts=new ArrayList<>();
+        // TO DO: read accounts?
     }
 
     @Override

@@ -16,6 +16,7 @@ import net.studioblueplanet.homecontrol.service.entities.Account;
 import net.studioblueplanet.homecontrol.service.entities.FriendAccount;
 import net.studioblueplanet.homecontrol.service.entities.HomeId;
 import net.studioblueplanet.homecontrol.tado.TadoAccountManager;
+import net.studioblueplanet.homecontrol.tado.TadoException;
 import net.studioblueplanet.homecontrol.tado.TadoInterface;
 import net.studioblueplanet.homecontrol.tado.entities.TadoAccount;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
@@ -84,7 +85,6 @@ public class AccountServiceImpl implements AccountService
                 .register();
     }
     
-    
     /**
      * Retrieve the account information from Tado.
      * @return The Tado account
@@ -92,19 +92,26 @@ public class AccountServiceImpl implements AccountService
     private Account retrieveAccountFromTado()
     {
         TadoMe  me;
-        Account account;
+        Account account=null;
 
-        MapperFacade mapper = mapperFactory.getMapperFacade();
         
-        me=tado.tadoMe();
+        try
+        {
+            me=tado.tadoMe();
+        }
+        catch (TadoException e)
+        {
+           throw new ServiceException(e.getMessage()); 
+        }
         
         if (me!=null)
         {
+            MapperFacade mapper = mapperFactory.getMapperFacade();
             account=mapper.map(me, Account.class);
         }
         else
         {
-            account=null;
+            throw new ServiceException("Account not found. Unauthorized access.");
         }
         return account;
     }
@@ -118,11 +125,10 @@ public class AccountServiceImpl implements AccountService
     @Override
     public Account getAccount()
     {
-        Account account=retrieveAccountFromTado();
-        if (account!=null)
-        {
-            account.setAccessibleHomes(getAvailableHomes());
-        }
+        Account account;
+        account=null;
+        account=retrieveAccountFromTado();
+        account.setAccessibleHomes(getAvailableHomes());
         return account;
     }
     

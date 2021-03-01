@@ -145,10 +145,17 @@
           xhttp = new XMLHttpRequest()
           xhttp.onreadystatechange = function() 
           {
-              if (this.readyState == 4 && this.status == 200) 
+              if (this.readyState == 4) 
               {
-                $('#homeInfoTitle').html('<H3>Home <i>'+homeName+'</i></H3>');
-                displayHomeInfo(JSON.parse(this.responseText));
+                if (this.status == 200)
+                {
+                  $('#homeInfoTitle').html('<H3>Home <i>'+homeName+'</i></H3>');
+                  displayHomeInfo(JSON.parse(this.responseText));
+                }
+                else
+                {
+                  handleError(this.responseText);
+                }
               }
           };
           xhttp.open("GET", "/api/home/"+homeId, true);
@@ -398,16 +405,16 @@
       /***********************************************************************************************\
       *
       \***********************************************************************************************/ 
-      function test()
+      function handleError(response)
       {
-        zones=[{name: "TestZone", 
-                id: 1,
-                power: "ON",
-                temperature: 20.15,
-                temperatureSetpoint: 23,
-                temperaturePrecision: 1.0,}];
-        editZone(0);
-      }    
+        error=JSON.parse(response);
+        alert(response);
+        $('#errorTimestamp').html(error.timestamp);
+        $('#errorStatus').html(error.status);
+        $('#errorMessage').html('<b>'+error.message+'</b>');
+        $('#errorError').html(error.error);
+        $('#errorModal').modal("show");
+      }
     </script>
   </head>
   <body onload="javascript:initialize();">
@@ -511,6 +518,26 @@
           </div>
         </div>
       </div>
-    </div>    
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal fade bg-warning" role="dialog">
+      <div class="modal-dialog modal-lg">
+        <!-- Modal content-->
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 id="errorTitle" class="modal-title">Error</h4>
+            <button type="button" class="close" data-dismiss="modal"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="modal-body">
+            <div id="errorTimestamp"></div>
+            <div id="errorStatus"></div>
+            <div id="errorError"></div>
+            <div id="errorException"></div>
+            <div id="errorMessage"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

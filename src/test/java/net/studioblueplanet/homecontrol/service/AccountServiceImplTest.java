@@ -13,6 +13,7 @@ import net.studioblueplanet.homecontrol.service.entities.FriendAccount;
 import net.studioblueplanet.homecontrol.service.entities.HomeId;
 import net.studioblueplanet.homecontrol.data.Persistence;
 import net.studioblueplanet.homecontrol.tado.TadoAccountManager;
+import net.studioblueplanet.homecontrol.tado.TadoException;
 import net.studioblueplanet.homecontrol.tado.TadoInterface;
 import net.studioblueplanet.homecontrol.tado.entities.TadoAccount;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
@@ -21,8 +22,10 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.Rule;
+import org.junit.rules.ExpectedException;
 import static org.junit.Assert.*;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +38,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import org.springframework.http.HttpStatus;
 
 /**
  *
@@ -144,7 +148,8 @@ public class AccountServiceImplTest
     {
     }
 
-    
+    @Rule
+    public ExpectedException exceptionRule = ExpectedException.none();     
     /**
      * Test of reset method, of class AccountServiceImpl.
      */
@@ -181,10 +186,6 @@ public class AccountServiceImplTest
         Account result;
         System.out.println("getAccount");
 
-        Mockito.when(tadoInterface.tadoMe()).thenReturn(null);
-        result = instance.getAccount();
-        assertNull(result);
-
         Mockito.reset(tadoInterface);
         Mockito.when(tadoInterface.tadoMe()).thenReturn(me);
         result = instance.getAccount();
@@ -192,6 +193,32 @@ public class AccountServiceImplTest
         assertEquals(me.getName(), result.getName());
         assertEquals(me.getHomes().get(0).getName(), result.getOwnHomes().get(0).getName());
         verify(tadoInterface, times(2)).tadoMe();
+    }
+
+    
+    /**
+     * Test of getAccount method, of class AccountServiceImpl.
+     */
+    @Test
+    public void testGetAccount_exceptions()
+    {
+        Account result;
+        System.out.println("getAccount - exception");
+
+        // Account not found
+        Mockito.when(tadoInterface.tadoMe()).thenReturn(null);
+        exceptionRule.expect(ServiceException.class);
+        exceptionRule.expectMessage("Account not found. Unauthorized access.");
+        result = instance.getAccount();
+
+        // Error from tado
+        String message="Exception message";
+        int    code   =403;
+        exceptionRule.expect(ServiceException.class);
+        exceptionRule.expectMessage("Tado Client error: "+message+". Status code: "+code);
+        Mockito.reset(tadoInterface);
+        Mockito.when(tadoInterface.tadoMe()).thenThrow(new TadoException(TadoException.TadoExceptionType.CLIENT_ERROR, message, code));
+        result = instance.getAccount();
     }
 
     /**

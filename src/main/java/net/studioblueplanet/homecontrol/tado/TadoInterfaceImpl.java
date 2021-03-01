@@ -5,7 +5,6 @@
  */
 package net.studioblueplanet.homecontrol.tado;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -38,7 +37,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -120,7 +118,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
                         account.setToken(localToken);
                     }
                 }
-                catch (HttpClientErrorException e)
+                catch (TadoException e)
                 {
                     LOG.error("Error requesting authentication token: {}", e.getMessage());
                 }        
@@ -227,7 +225,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     public TadoMe tadoMe()
     {
         TadoAccount loggedInAccount =accountManager.loggedInAccount();
-        TadoMe      me              =accountManager.loggedInAccount().getTadoMe();
+        TadoMe      me              =loggedInAccount.getTadoMe();
         
         if (me==null)
         {
@@ -235,12 +233,9 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
             HttpHeaders headers             = new HttpHeaders();
             headers.setBearerAuth(loggedInAccount.getToken().getAccess_token());
             HttpEntity entity               = new HttpEntity(headers);
-
-            me=null;
             ResponseEntity<TadoMe> response = template.exchange("https://my.tado.com/api/v2/me/", HttpMethod.GET, entity, TadoMe.class);        
             me=response.getBody();
             loggedInAccount.setTadoMe(me); // cache account information
-
         }
         return me;
     }
@@ -261,7 +256,8 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
         }
         else
         {
-            LOG.error("No account found for home {} requested by user ", homeId, accountManager.loggedInUsername());
+            LOG.error("No account found for home {} requested by user {}", homeId, accountManager.loggedInUsername());
+            throw new TadoException(TadoException.TadoExceptionType.APPLICATION_ERROR, "No account found for home "+homeId+". Unauthorized access.", 0);
         }
         return home;        
     }
@@ -270,42 +266,69 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     public List<TadoZone> tadoZones(int homeId)
     {
         TadoAccount account=accountManager.findAccount(homeId);
-
-        LOG.info("Requesting Tado ZONES for user {}, home {}", account.getUsername(), homeId);
-        HttpHeaders headers             = new HttpHeaders();
-        headers.setBearerAuth(account.getToken().getAccess_token());
-        HttpEntity entity               = new HttpEntity(headers);
-        ResponseEntity<TadoZone[]> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/zones", HttpMethod.GET, entity, TadoZone[].class);        
-        TadoZone[] zones=response.getBody();
-        return Arrays.stream(zones).collect(Collectors.toList());             
+        List<TadoZone> zones=null;
+        if (account!=null)
+        {
+            LOG.info("Requesting Tado ZONES for user {}, home {}", account.getUsername(), homeId);
+            HttpHeaders headers             = new HttpHeaders();
+            headers.setBearerAuth(account.getToken().getAccess_token());
+            HttpEntity entity               = new HttpEntity(headers);
+            ResponseEntity<TadoZone[]> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/zones", HttpMethod.GET, entity, TadoZone[].class);        
+            zones=Arrays.stream(response.getBody()).collect(Collectors.toList());
+        }
+        else
+        {
+            LOG.error("No account found for home {} requested by user {}", homeId, accountManager.loggedInUsername());
+            throw new TadoException(TadoException.TadoExceptionType.APPLICATION_ERROR, "No account found for home "+homeId+". Unauthorized access.", 0);            
+        }
+        return zones;             
     }
     
     @Override
-    public TadoState tadoState(int homeId)
+    public TadoState tadoPresence(int homeId)
     {
         TadoAccount account=accountManager.findAccount(homeId);
-
-        LOG.info("Requesting Tado STATE for user {}, home {}", account.getUsername(), homeId);
-        HttpHeaders headers             = new HttpHeaders();
-        headers.setBearerAuth(account.getToken().getAccess_token());
-        HttpEntity entity               = new HttpEntity(headers);
-        ResponseEntity<TadoState> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/state", HttpMethod.GET, entity, TadoState.class);        
-        TadoState state=response.getBody();
+        TadoState state=null;   
+        
+        if (account!=null)
+        {
+        LOG.info("Requesting Tado PRESENCE for user {}, home {}", account.getUsername(), homeId);
+            HttpHeaders headers             = new HttpHeaders();
+            headers.setBearerAuth(account.getToken().getAccess_token());
+            HttpEntity entity               = new HttpEntity(headers);
+            ResponseEntity<TadoState> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/state", 
+                                                                   HttpMethod.GET, entity, TadoState.class);        
+            state=response.getBody();
+        }
+        else
+        {
+            LOG.error("No account found for home {} requested by user {}", homeId, accountManager.loggedInUsername());
+            throw new TadoException(TadoException.TadoExceptionType.APPLICATION_ERROR, "No account found for home "+homeId+". Unauthorized access.", 0);            
+        }        
         return state;         
     }
     
     @Override
     public TadoZoneState tadoZoneState(int homeId, int zoneId)
     {
-        TadoAccount account=accountManager.findAccount(homeId);
+        TadoAccount     account =accountManager.findAccount(homeId);
+        TadoZoneState   state   =null;
 
-        LOG.info("Requesting Tado ZONES for user {}, home {}, zone {}", account.getUsername(), homeId, zoneId);
-        HttpHeaders headers             = new HttpHeaders();
-        headers.setBearerAuth(account.getToken().getAccess_token());
-        HttpEntity entity               = new HttpEntity(headers);
-        ResponseEntity<TadoZoneState> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/zones/"+zoneId+"/state", 
-                                                                   HttpMethod.GET, entity, TadoZoneState.class);        
-        TadoZoneState state=response.getBody();
+        if (account!=null)
+        {
+            LOG.info("Requesting Tado ZONES for user {}, home {}, zone {}", account.getUsername(), homeId, zoneId);
+            HttpHeaders headers             = new HttpHeaders();
+            headers.setBearerAuth(account.getToken().getAccess_token());
+            HttpEntity entity               = new HttpEntity(headers);
+            ResponseEntity<TadoZoneState> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/zones/"+zoneId+"/state", 
+                                                                       HttpMethod.GET, entity, TadoZoneState.class);        
+            state=response.getBody();
+        }
+        else
+        {
+            LOG.error("No account found for home {} requested by user {}", homeId, accountManager.loggedInUsername());
+            throw new TadoException(TadoException.TadoExceptionType.APPLICATION_ERROR, "No account found for home "+homeId+". Unauthorized access.", 0);            
+        } 
         return state;            
     }
     
@@ -314,16 +337,25 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     {
         TadoAccount account=accountManager.findAccount(homeId);
 
-        LOG.info("Set Tado PRESENCE for user {}, home {}", account.getUsername(), homeId);
-        TadoPresence thePresence;
-        
-        HttpHeaders headers             = new HttpHeaders();
-        thePresence=new TadoPresence();
-        thePresence.setHomePresence(presence);
-        headers.setBearerAuth(account.getToken().getAccess_token());
-        HttpEntity<TadoPresence> entity        = new HttpEntity<>(thePresence, headers);
-        ResponseEntity<String> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/presenceLock", 
-                                                            HttpMethod.PUT, entity, String.class);        
+
+        if (account!=null)
+        {
+            LOG.info("Set Tado PRESENCE for user {}, home {}", account.getUsername(), homeId);
+            TadoPresence thePresence;
+
+            HttpHeaders headers             = new HttpHeaders();
+            thePresence=new TadoPresence();
+            thePresence.setHomePresence(presence);
+            headers.setBearerAuth(account.getToken().getAccess_token());
+            HttpEntity<TadoPresence> entity        = new HttpEntity<>(thePresence, headers);
+            ResponseEntity<String> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/presenceLock", 
+                                                                HttpMethod.PUT, entity, String.class);
+        }
+        else
+        {
+            LOG.error("No account found for home {} requested by user {}", homeId, accountManager.loggedInUsername());
+            throw new TadoException(TadoException.TadoExceptionType.APPLICATION_ERROR, "No account found for home "+homeId+". Unauthorized access.", 0);            
+        } 
     }
     
     @Override
@@ -338,30 +370,33 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     @Override
     public TadoOverlay setTadoOverlay(int homeId, int zoneId, TadoOverlay overlay)
     {
-        TadoAccount account=accountManager.findAccount(homeId);
-
-        LOG.info("Set Tado OVERLAY for user {}, home {}, zone {}", account.getUsername(), homeId, zoneId);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(account.getToken().getAccess_token());
-        HttpEntity<TadoOverlay> entity = new HttpEntity<>(overlay, headers);
-        ResponseEntity<TadoOverlay> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/zones/"+zoneId+"/overlay", 
-                                                            HttpMethod.PUT, entity, TadoOverlay.class); 
-        
-        return response.getBody();
+        TadoAccount  account        =accountManager.findAccount(homeId);
+        TadoOverlay  responseOverlay=null;
+        if (account!=null)
+        {
+            LOG.info("Set Tado OVERLAY for user {}, home {}, zone {}", account.getUsername(), homeId, zoneId);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(account.getToken().getAccess_token());
+            HttpEntity<TadoOverlay> entity = new HttpEntity<>(overlay, headers);
+            ResponseEntity<TadoOverlay> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/zones/"+zoneId+"/overlay", 
+                                                   HttpMethod.PUT, entity, TadoOverlay.class); 
+            responseOverlay=response.getBody();
+        }
+        else
+        {
+            LOG.error("No account found for home {} requested by user {}", homeId, accountManager.loggedInUsername());
+            throw new TadoException(TadoException.TadoExceptionType.APPLICATION_ERROR, "No account found for home "+homeId+". Unauthorized access.", 0);            
+        }        
+        return responseOverlay;
     }
     
     @Override
     public TadoOverlay setTadoOverlay(int homeId, int zoneId, String type, String power, double temperature, String termination, int timerSeconds)
     {
-        TadoAccount account=accountManager.findAccount(homeId);
-
-        LOG.info("Set Tado OVERLAY for user {}, home {}, zone {}", account.getUsername(), homeId, zoneId);
-
         TadoTemperature temp=new TadoTemperature();
         temp.setCelsius(temperature);
         temp.setFahrenheit((temperature * 9.0/5.0) + 32.0);
         TadoSetting setting=new TadoSetting();
-
 
         setting.setPower(power);
         if (power.equals("ON"))
@@ -424,12 +459,20 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     {
         TadoAccount account=accountManager.findAccount(homeId);
 
-        LOG.info("Delete Tado OVERLAY for user {}, home {}, zone {}", account.getUsername(), homeId, zoneId);
-        HttpHeaders headers             = new HttpHeaders();
-        headers.setBearerAuth(account.getToken().getAccess_token());
-        HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<String> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/zones/"+zoneId+"/overlay", 
-                                                            HttpMethod.DELETE, entity, String.class);          
+        if (account!=null)
+        {
+            LOG.info("Delete Tado OVERLAY for user {}, home {}, zone {}", account.getUsername(), homeId, zoneId);
+            HttpHeaders headers             = new HttpHeaders();
+            headers.setBearerAuth(account.getToken().getAccess_token());
+            HttpEntity entity = new HttpEntity(headers);
+            ResponseEntity<String> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/zones/"+zoneId+"/overlay", 
+                                                                HttpMethod.DELETE, entity, String.class);  
+        }
+        else
+        {
+            LOG.error("No account found for home {} requested by user {}", homeId, accountManager.loggedInUsername());
+            throw new TadoException(TadoException.TadoExceptionType.APPLICATION_ERROR, "No account found for home "+homeId+". Unauthorized access.", 0);            
+        }         
     }
     
     
@@ -438,13 +481,21 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     {
         TadoAccount account=accountManager.findAccount(homeId);
 
-        LOG.info("Requesting Tado ZONES for user {}, home {}", account.getUsername(), homeId);
-        HttpHeaders headers             = new HttpHeaders();
-        headers.setBearerAuth(account.getToken().getAccess_token());
-        HttpEntity entity               = new HttpEntity(headers);
-        ResponseEntity<TadoDevice[]> response = template.exchange("https://my.tado.com/api/v1/home/"+homeId+"/devices", 
-                                                                   HttpMethod.GET, entity, TadoDevice[].class);        
-        TadoDevice[] devices=response.getBody();
-        return Arrays.stream(devices).collect(Collectors.toList());            
+        if (account!=null)
+        {
+            LOG.info("Requesting Tado ZONES for user {}, home {}", account.getUsername(), homeId);
+            HttpHeaders headers             = new HttpHeaders();
+            headers.setBearerAuth(account.getToken().getAccess_token());
+            HttpEntity entity               = new HttpEntity(headers);
+            ResponseEntity<TadoDevice[]> response = template.exchange("https://my.tado.com/api/v1/home/"+homeId+"/devices", 
+                                                                       HttpMethod.GET, entity, TadoDevice[].class);        
+            TadoDevice[] devices=response.getBody();
+            return Arrays.stream(devices).collect(Collectors.toList());
+        }
+        else
+        {
+            LOG.error("No account found for home {} requested by user {}", homeId, accountManager.loggedInUsername());
+            throw new TadoException(TadoException.TadoExceptionType.APPLICATION_ERROR, "No account found for home "+homeId+". Unauthorized access.", 0);            
+        }         
     }
 }

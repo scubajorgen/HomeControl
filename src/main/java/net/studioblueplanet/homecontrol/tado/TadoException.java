@@ -14,7 +14,8 @@ public class TadoException extends RuntimeException
     public enum TadoExceptionType
     {
         SERVER_ERROR,
-        CLIENT_ERROR
+        CLIENT_ERROR,
+        APPLICATION_ERROR
     }
     private final TadoExceptionType     type;
     private final int                   statusCode;
@@ -36,7 +37,10 @@ public class TadoException extends RuntimeException
                 message="Server error: "+super.getMessage();
                 break;
             case CLIENT_ERROR:
-                message="Client error: "+super.getMessage()+". Status code: "+statusCode;
+                message="Client error: "+super.getMessage();
+                break;
+            case APPLICATION_ERROR:
+                message="Application error: "+super.getMessage();
                 break;
             default:
                 message="Unknown error";
@@ -49,7 +53,7 @@ public class TadoException extends RuntimeException
     {
         return type;
     }
-   
+
     public int getStatusCode()
     {
         return statusCode;

@@ -7,6 +7,7 @@ package net.studioblueplanet.homecontrol.service;
 
 import java.util.List;
 
+import net.studioblueplanet.homecontrol.service.entities.Device;
 import net.studioblueplanet.homecontrol.service.entities.Home;
 import net.studioblueplanet.homecontrol.service.entities.Presence;
 import net.studioblueplanet.homecontrol.service.entities.Overlay;
@@ -60,4 +61,11 @@ public interface HomeService
      * @param zoneId ID of the zone
      */
     public void         deleteOverlay(int homeId, int zoneId);
+    
+    /**
+     * Returns a list of devices for indicated  home
+     * @param homeId ID of the home
+     * @return List of devices
+     */
+    public List<Device> getDevices(int homeId);
 }

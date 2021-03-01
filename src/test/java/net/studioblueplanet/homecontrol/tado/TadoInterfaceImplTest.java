@@ -241,6 +241,18 @@ public class TadoInterfaceImplTest
     }
 
     /**
+     * Test of signOut method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void reset()
+    {
+        System.out.println("reset");
+        
+        Mockito.reset(accountManager);
+        tadoInterface.reset();
+        Mockito.verify(accountManager, Mockito.times(1)).deleteAllAccounts();
+    }    
+    /**
      * Test of tadoMe method, of class TadoInterfaceImpl.
      */
     @Test
@@ -298,7 +310,6 @@ public class TadoInterfaceImplTest
      */
 
     @Test
-    @WithMockUser("username@email.com")
     public void testTadoMeRepeated() throws Exception
     {
         System.out.println("tadoMe");
@@ -316,21 +327,17 @@ public class TadoInterfaceImplTest
             
         TadoMe result = tadoInterface.tadoMe();
         assertEquals("12345678-1234-1234-1234-0123456789AB", result.getId());
-        
         mockServer.verify();
        
-        // Second call is retrieved from 
+        // Second call is retrieved from cache
         result = tadoInterface.tadoMe();
         assertEquals("12345678-1234-1234-1234-0123456789AB", result.getId());  
         mockServer.verify();
     }
-    
-        
 
     /**
      * Test of tadoMe method, of class TadoInterfaceImpl.
      */
-
     @Test
     public void testTadoMeUnauthorized() throws Exception
     {
@@ -339,7 +346,7 @@ public class TadoInterfaceImplTest
         meAccount.setTadoMe(null);
 
         mockServer.reset();
-        String body = "Unauthorized or something";
+        String body = "{\"errors\": [{\"code\": \"unauthorized\", \"title\": \"Bad credentials\"}]}";
         mockServer.expect(ExpectedCount.once(), 
           requestTo(new URI("https://my.tado.com/api/v2/me/")))
           .andExpect(method(HttpMethod.GET))
@@ -347,13 +354,9 @@ public class TadoInterfaceImplTest
           .contentType(MediaType.APPLICATION_JSON)
           .body(body)
         );               
-
         exceptionRule.expect(TadoException.class);
-        exceptionRule.expectMessage("Client error: Unauthorized. Status code: 401");        
-
+        exceptionRule.expectMessage("Client error: Tado reported: 401-Unauthorized");        
         TadoMe result = tadoInterface.tadoMe();
-        assertNull(result);
-        
         mockServer.verify();
     }
 
@@ -412,7 +415,7 @@ public class TadoInterfaceImplTest
     @Test
     public void testTadoHome_Exception() throws Exception
     {
-        System.out.println("tadoHome");
+        System.out.println("tadoHome - exception");
         authenticate();
 
         mockServer.reset();
@@ -425,13 +428,35 @@ public class TadoInterfaceImplTest
           .body(body)
         );   
         exceptionRule.expect(TadoException.class);
-        exceptionRule.expectMessage("Client error: Not Found. Status code: 404");
+        exceptionRule.expectMessage("Client error: Tado reported: 404-Not Found");
             
         TadoHome result = tadoInterface.tadoHome(123456);
-       
-        mockServer.verify();
     }
+    /**
+     * Test of tadoHome method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testTadoHome_Exception2() throws Exception
+    {
+        System.out.println("tadoHome - exception");
+        authenticate();
 
+        mockServer.reset();
+        String body = new String(Files.readAllBytes((new File("src/test/resources/tadoHome.json")).toPath()));
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456")))
+          .andExpect(method(HttpMethod.GET))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(body)
+        );   
+        
+        Mockito.when(accountManager.findAccount(123456)).thenReturn(null);
+        exceptionRule.expect(TadoException.class);
+        exceptionRule.expectMessage("Application error: No account found for home 123456. Unauthorized access.");
+            
+        TadoHome result = tadoInterface.tadoHome(123456);
+    }
     
     
     /**
@@ -487,14 +512,37 @@ public class TadoInterfaceImplTest
         assertEquals(null, result.get(3).getDevices().get(0).getMountingState());
         mockServer.verify();
     }
+
+    /**
+     * Test of tadoZones method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testTadoZones_Exception() throws Exception
+    {
+        System.out.println("tadoZones");
+
+        mockServer.reset();
+        String body = "{\"errors\":[{\"code\": \"notFound\",\"title\":\"home 123456 not found\"}]}";
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/zones")))
+          .andExpect(method(HttpMethod.GET))
+          .andRespond(withStatus(HttpStatus.NOT_FOUND)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(body)
+        );                                   
+            
+        exceptionRule.expect(TadoException.class);
+        exceptionRule.expectMessage("Client error: Tado reported: 404-Not Found");
+        List<TadoZone> result = tadoInterface.tadoZones(123456);
+    }
     
     /**
      * Test of tadoState method, of class TadoInterfaceImpl.
      */
     @Test
-    public void testTadoState() throws Exception
+    public void testTadoPresence() throws Exception
     {
-        System.out.println("tadoState");
+        System.out.println("tadoPresence");
 
         mockServer.reset();
         String body = new String(Files.readAllBytes((new File("src/test/resources/tadoState.json")).toPath()));
@@ -506,7 +554,7 @@ public class TadoInterfaceImplTest
           .body(body)
         );                                   
             
-        TadoState result = tadoInterface.tadoState(123456);
+        TadoState result = tadoInterface.tadoPresence(123456);
         assertEquals("AWAY", result.getPresence());
         assertEquals(true, result.isPresenceLocked());
         assertEquals(false, result.isShowHomePresenceSwitchButton());
@@ -636,7 +684,7 @@ public class TadoInterfaceImplTest
     }
     
     /**
-     * Test of tadoZones method, of class TadoInterfaceImpl.
+     * Test of tadoDevices method, of class TadoInterfaceImpl.
      */
     @Test
     public void testTadoDevices() throws Exception
@@ -666,6 +714,44 @@ public class TadoInterfaceImplTest
         mockServer.verify();
     }
     
+    /**
+     * Test of tadoZones method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testTadoOverlay() throws Exception
+    {
+        System.out.println("tadoOverlay");
+    }
+    
+    /**
+     * Test of deleteTadoOverlay method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testDeleteTadoOverlay() throws Exception
+    {
+        System.out.println("deleteTadoOverlay");
+        mockServer.reset();
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/presenceLock")))
+          .andExpect(method(HttpMethod.PUT))
+          .andExpect(content().string("{\"homePresence\":\"AWAY\"}"))
+          .andRespond(withStatus(HttpStatus.NO_CONTENT)
+        );                                       
+        tadoInterface.setTadoPresence(123456, TadoHomePresence.AWAY);
+        mockServer.verify();
+
+        mockServer.reset();
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/presenceLock")))
+          .andExpect(method(HttpMethod.PUT))
+          .andExpect(content().string("{\"homePresence\":\"HOME\"}"))
+          .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+          .andRespond(withStatus(HttpStatus.NO_CONTENT)
+        );                                       
+        tadoInterface.setTadoPresence(123456, TadoHomePresence.HOME);
+        mockServer.verify();
+    }
+
     /**
      * Test of setTadoOverlay method, of class TadoInterfaceImpl.
      */

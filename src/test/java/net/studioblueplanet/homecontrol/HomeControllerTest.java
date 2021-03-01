@@ -65,6 +65,7 @@ public class HomeControllerTest
     @MockBean
     private HomeService     homeService;
 
+    private static int      homeId;
     private static Account  account;
     
     public HomeControllerTest()
@@ -74,10 +75,11 @@ public class HomeControllerTest
     @BeforeClass
     public static void setUpClass()
     {
-        int homeId=12345;
+        homeId=12345;
         account=new Account();
         HomeId home=new HomeId();
         home.setId(homeId);
+        home.setName("HQ");
         ArrayList<HomeId> homes=new ArrayList<>();
         homes.add(home);
         account.setOwnHomes(homes);
@@ -137,13 +139,6 @@ public class HomeControllerTest
     {
         System.out.println("state");
 
-        int homeId=12345;
-        Account account=new Account();
-        HomeId home=new HomeId();
-        home.setId(homeId);
-        ArrayList<HomeId> homes=new ArrayList<>();
-        homes.add(home);
-        account.setOwnHomes(homes);
         Mockito.when(this.accountService.getAccount()).thenReturn(account);
 
         Presence state=new Presence();
@@ -168,13 +163,6 @@ public class HomeControllerTest
     {
         System.out.println("home");
 
-        int homeId=12345;
-        Account account=new Account();
-        HomeId home=new HomeId();
-        home.setId(homeId);
-        ArrayList<HomeId> homes=new ArrayList<>();
-        homes.add(home);
-        account.setOwnHomes(homes);
         Mockito.when(this.accountService.getAccount()).thenReturn(account);
 
         Home theHome=new Home();
@@ -197,7 +185,7 @@ public class HomeControllerTest
     public void testPresence() throws Exception   
     {
         System.out.println("presence");
-
+/*
         Mockito.when(this.accountService.getAccount()).thenReturn(null);
         mvc.perform(MockMvcRequestBuilders.put("/api/home/12345/presence")
         .content("{\"presence\": \"AWAY\"}")
@@ -206,7 +194,7 @@ public class HomeControllerTest
         .andExpect(status().isPreconditionFailed())
         .andDo(print())
         .andReturn();        
-
+*/
         Mockito.when(this.accountService.getAccount()).thenReturn(account);
         mvc.perform(MockMvcRequestBuilders.put("/api/home/12345/presence")
         .contentType(MediaType.APPLICATION_JSON)

@@ -11,10 +11,13 @@ import javax.annotation.PostConstruct;
 import ma.glasnost.orika.MapperFacade;
 import ma.glasnost.orika.MapperFactory;
 import net.studioblueplanet.homecontrol.service.entities.Account;
+import net.studioblueplanet.homecontrol.service.entities.Device;
 import net.studioblueplanet.homecontrol.service.entities.Home;
 import net.studioblueplanet.homecontrol.service.entities.Presence;
 import net.studioblueplanet.homecontrol.service.entities.Overlay;
 import net.studioblueplanet.homecontrol.service.entities.Zone;
+import net.studioblueplanet.homecontrol.tado.TadoException;
+import net.studioblueplanet.homecontrol.tado.entities.TadoDevice;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence.TadoHomePresence;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
@@ -23,6 +26,7 @@ import net.studioblueplanet.homecontrol.tado.entities.TadoZoneState;
 import net.studioblueplanet.homecontrol.tado.TadoInterface;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 /**
  *
  * @author jorgen
@@ -84,6 +88,12 @@ public class HomeServiceImpl implements HomeService
                 .field("activityDataPoints.heatingPower.percentage", "heatingPower")
                 .field("overlay.termination.typeSkillBasedApp", "overlayTermination")
                 .register();
+        
+        mapperFactory.classMap(TadoDevice.class, Device.class)
+                .byDefault()
+                .field("connectionState.timestamp", "lastConnected")
+                .register();
+        
     }
     
     @Override
@@ -91,14 +101,20 @@ public class HomeServiceImpl implements HomeService
     {
         TadoHome  home;
         TadoState state;
-        Home      theHome;
+        Home      theHome=null;
         
-        state=tado.tadoState(homeId);    
-        home=tado.tadoHome(homeId);
-        
-        MapperFacade mapper = mapperFactory.getMapperFacade();
-        theHome=mapper.map(home, Home.class);
-        mapper.map(state, theHome);
+        try
+        {
+            state   =tado.tadoPresence(homeId);    
+            home    =tado.tadoHome(homeId);
+            MapperFacade mapper = mapperFactory.getMapperFacade();
+            theHome=mapper.map(home, Home.class);
+            mapper.map(state, theHome);
+        }
+        catch (TadoException e)
+        {
+            throw new ServiceException(e.getMessage());
+        }
         return theHome;
     }
     
@@ -106,23 +122,37 @@ public class HomeServiceImpl implements HomeService
     public Presence getHomeState(int homeId)
     {
         TadoState state;
-        
-        state=tado.tadoState(homeId);
-        
-        MapperFacade mapper = mapperFactory.getMapperFacade();
-        return mapper.map(state, Presence.class);
+        Presence  presence=null;
+        try
+        {
+            state=tado.tadoPresence(homeId);
+            MapperFacade mapper = mapperFactory.getMapperFacade();
+            presence=mapper.map(state, Presence.class);
+        }
+        catch (TadoException e)
+        {
+            throw new ServiceException(e.getMessage());
+        }
+        return presence;
     }
 
     @Override
     public void setPresence(int homeId, Presence presence)
     {
-        if (presence.getPresence().equals("AWAY"))
+        try
         {
-            tado.setTadoPresence(homeId, TadoHomePresence.AWAY);
+            if (presence.getPresence().equals("AWAY"))
+            {
+                tado.setTadoPresence(homeId, TadoHomePresence.AWAY);
+            }
+            else
+            {
+                tado.setTadoPresence(homeId, TadoHomePresence.HOME);
+            }
         }
-        else
+        catch (TadoException e)
         {
-            tado.setTadoPresence(homeId, TadoHomePresence.HOME);
+            throw new ServiceException(e.getMessage());
         }
     }
     
@@ -130,23 +160,28 @@ public class HomeServiceImpl implements HomeService
     public List<Zone>   getZones(int homeId)
     {
         List<TadoZone>  tadoZones;
-        List<Zone>      zones;
+        List<Zone>      zones=null;
         Iterator<Zone>  it;
         Zone            zone;
         TadoZoneState   state;        
         
-        tadoZones=tado.tadoZones(homeId);
-        
-        
-        MapperFacade mapper = mapperFactory.getMapperFacade();
-        zones=mapper.mapAsList(tadoZones, Zone.class);
-        
-        it=zones.iterator();
-        while (it.hasNext())
+        try
         {
-            zone    =it.next();
-            state   =tado.tadoZoneState(homeId, zone.getId());
-            mapper.map(state, zone);
+            tadoZones=tado.tadoZones(homeId);
+            MapperFacade mapper = mapperFactory.getMapperFacade();
+            zones=mapper.mapAsList(tadoZones, Zone.class);
+
+            it=zones.iterator();
+            while (it.hasNext())
+            {
+                zone    =it.next();
+                state   =tado.tadoZoneState(homeId, zone.getId());
+                mapper.map(state, zone);
+            }
+        }
+        catch (TadoException e)
+        {
+            throw new ServiceException(e.getMessage());
         }
         
         return zones;
@@ -155,12 +190,46 @@ public class HomeServiceImpl implements HomeService
     @Override
     public void setOverlay(int homeId, int zoneId, Overlay overlay)
     {
-        tado.setTadoOverlay(homeId, zoneId, overlay.getType(), overlay.getPower(), overlay.getTemperatureSetpoint(), overlay.getTermination(), overlay.getTimer());
+        try
+        {
+            tado.setTadoOverlay(homeId, zoneId, overlay.getType(), overlay.getPower(), overlay.getTemperatureSetpoint(), overlay.getTermination(), overlay.getTimer());
+        }
+        catch (TadoException e)
+        {
+            throw new ServiceException(e.getMessage());
+        }
     }
     
     @Override
     public void deleteOverlay(int homeId, int zoneId)
     {
-        tado.deleteTadoOverlay(homeId, zoneId);
+        try
+        {
+            tado.deleteTadoOverlay(homeId, zoneId);
+        }
+        catch (TadoException e)
+        {
+            throw new ServiceException(e.getMessage());
+        }
+    }
+    
+    @Override
+    public List<Device> getDevices(int homeId)
+    {
+        List<TadoDevice>    tadoDevices;
+        List<Device>        devices=null;
+        
+        try
+        {
+            tadoDevices=tado.tadoDevices(homeId);
+            MapperFacade mapper = mapperFactory.getMapperFacade();
+            devices=mapper.mapAsList(tadoDevices, Device.class);
+        }
+        catch (TadoException e)
+        {
+            throw new ServiceException(e.getMessage());
+        }
+        
+        return devices;        
     }
 }

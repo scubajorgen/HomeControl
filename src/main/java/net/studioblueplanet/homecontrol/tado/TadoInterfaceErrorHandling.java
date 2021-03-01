@@ -20,7 +20,6 @@ import org.springframework.http.HttpStatus;
 @Component
 public class TadoInterfaceErrorHandling implements ResponseErrorHandler
 {
-
     @Override
     public boolean hasError(ClientHttpResponse httpResponse)
             throws IOException
@@ -38,27 +37,17 @@ public class TadoInterfaceErrorHandling implements ResponseErrorHandler
         if (httpResponse.getStatusCode().series() == HttpStatus.Series.SERVER_ERROR)
         {
             // handle SERVER_ERROR
-            throw new TadoException(TadoException.TadoExceptionType.SERVER_ERROR, httpResponse.getStatusText(), httpResponse.getStatusCode().value());
+            throw new TadoException(TadoException.TadoExceptionType.SERVER_ERROR, 
+                                    "Tado reported: "+httpResponse.getRawStatusCode()+"-"+httpResponse.getStatusText(), 
+                                    httpResponse.getRawStatusCode());
 
         } 
         else if (httpResponse.getStatusCode().series() == HttpStatus.Series.CLIENT_ERROR)
         {
-            throw new TadoException(TadoException.TadoExceptionType.CLIENT_ERROR, httpResponse.getStatusText(), httpResponse.getStatusCode().value());
             // handle CLIENT_ERROR
-/*
-            if (httpResponse.getStatusCode() == HttpStatus.NOT_FOUND)
-            {
-                throw new TadoNotFoundException();
-            }
-            else if (httpResponse.getStatusCode() == HttpStatus.UNAUTHORIZED)
-            {
-                throw new TadoUnauthorizedException();
-            }
-            else if (httpResponse.getStatusCode() == HttpStatus.BAD_REQUEST)
-            {
-                throw new TadoBadRequestException();
-            }
-*/
+            throw new TadoException(TadoException.TadoExceptionType.CLIENT_ERROR, 
+                                    "Tado reported: "+httpResponse.getRawStatusCode()+"-"+httpResponse.getStatusText(), 
+                                    httpResponse.getRawStatusCode());
         }
     }
 }

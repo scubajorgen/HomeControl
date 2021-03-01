@@ -19,7 +19,7 @@ public interface TadoAccountManager
      * Indicates if current logged in user has an account
      * @return True if authorized
      */
-    public boolean isAuthorized();
+    public boolean          isAuthorized();
     
     /**
      * Find the account if it already exists.
@@ -33,7 +33,7 @@ public interface TadoAccountManager
      * @param homeId ID Of the home
      * @return The account to use or null if no account available
      */
-    public TadoAccount findAccount(int homeId);
+    public TadoAccount      findAccount(int homeId);
 
     /**
      * Retrieves the TadoAccount of currently logged in user
@@ -57,17 +57,17 @@ public interface TadoAccountManager
      * Add new account
      * @param account Account to add
      */
-    public void addAccount(TadoAccount account);
+    public void             addAccount(TadoAccount account);
     
     /**
      * Remove account based on account username
      * @param username Username
      */
-    public void deleteAccount(String username);
+    public void             deleteAccount(String username);
     
     /**
      * Remove all existing accounts
      */
-    public void deleteAllAccounts();
+    public void             deleteAllAccounts();
             
 }

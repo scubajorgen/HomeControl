@@ -70,7 +70,7 @@ public interface TadoInterface
      * @param homeId Id of the home
      * @return The tado state
      */
-    public TadoState        tadoState(int homeId);
+    public TadoState        tadoPresence(int homeId);
     
     /**
      * Request the information of a zone

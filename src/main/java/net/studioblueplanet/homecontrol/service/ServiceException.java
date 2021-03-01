@@ -11,8 +11,15 @@ package net.studioblueplanet.homecontrol.service;
  */
 public class ServiceException extends RuntimeException
 {
+    private String userAccount="xx";
+    
     public ServiceException(String message)
     {
         super(message);
+    }
+
+    public String getUserAccount()
+    {
+        return userAccount;
     }
 }
