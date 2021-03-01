@@ -140,74 +140,66 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
         int         delaySeconds;
         long        delayMilliseconds;
         boolean     accountExists;
-        TadoToken   localToken;
+        TadoToken   token;
         TadoAccount account;
         
         LOG.info("Authenticating user {}", username);
-        synchronized (this)
+        
+        token=null;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        requestBody.add("client_id", "tado-web-app");
+        requestBody.add("scope", "home.user");
+        requestBody.add("grant_type", "password");
+        requestBody.add("username", username);
+        requestBody.add("password", password);
+        requestBody.add("client_secret", "wZaRN7rpjn3FoNyF5IFuxg9uMzYJcvOoQ8QWiIqS3hfk6gLhVlG57j5YNoZL2Rtc");
+
+        HttpEntity formEntity = new HttpEntity<>(requestBody, headers);
+        try
         {
-            localToken=null;
-            account=accountManager.findAccount(username);
-            if (account!=null)
+            token = template.postForObject("https://auth.tado.com/oauth/token", formEntity, TadoToken.class);
+            if (token!=null)
             {
-                localToken=account.getToken();
-                LOG.info("Account found for {}: acquired {}, expires {} (in {} seconds)", username, account.getLastRefresh(), account.expiryDate(), account.expiresIn());
-            }
-        }
-        if (localToken==null)
-        {
-            signOut();
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-            MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
-            requestBody.add("client_id", "tado-web-app");
-            requestBody.add("scope", "home.user");
-            requestBody.add("grant_type", "password");
-            requestBody.add("username", username);
-            requestBody.add("password", password);
-            requestBody.add("client_secret", "wZaRN7rpjn3FoNyF5IFuxg9uMzYJcvOoQ8QWiIqS3hfk6gLhVlG57j5YNoZL2Rtc");
-
-            HttpEntity formEntity = new HttpEntity<>(requestBody, headers);
-            try
-            {
-                localToken = template.postForObject("https://auth.tado.com/oauth/token", formEntity, TadoToken.class);
-                LOG.info("Token acquired for {}: expires in {} seconds", username, localToken.getExpires_in());
-
+                LOG.info("Token acquired for {}: expires in {} seconds", username, token.getExpires_in());
                 synchronized(this)
                 {
+                    account=accountManager.findAccount(username);
                     if (account!=null)
                     {
-                        account.setToken(localToken);
+                        LOG.info("Account found for {}: acquired {}, expires {} (in {} seconds)", username, account.getLastRefresh(), account.expiryDate(), account.expiresIn());
+                        account.setToken(token);
                     }
                     else
                     {
-                        account=new TadoAccount(username, password, localToken);
+                        LOG.info("Account not found for {}, creating new account", username);
+                        account=new TadoAccount(username, password, token);
                         accountManager.addAccount(account);
                     }
                 }
             }
-            catch (TadoException e)
+        }
+        catch (TadoException e)
+        {
+            if (e.getType()==TadoException.TadoExceptionType.CLIENT_ERROR)
             {
-                if (e.getType()==TadoException.TadoExceptionType.CLIENT_ERROR)
+                if (e.getStatusCode()==400)
                 {
-                    if (e.getStatusCode()==400)
-                    {
-                        LOG.error("Invalid credentials for user {}: {}", username, e.getMessage());
-                    }
-                    else if (e.getStatusCode()==401)
-                    {
-                        LOG.error("Error requesting authentication token for user {}: {}", username, e.getMessage());
-                    }
-                    else
-                    {
-                        LOG.error("Unexpected Error requesting authentication token for user {}: {}", username, e.getMessage());
-                    }
+                    LOG.error("Invalid credentials for user {}: {}", username, e.getMessage());
+                }
+                else if (e.getStatusCode()==401)
+                {
+                    LOG.error("Error requesting authentication token for user {}: {}", username, e.getMessage());
+                }
+                else
+                {
+                    LOG.error("Unexpected Error requesting authentication token for user {}: {}", username, e.getMessage());
                 }
             }
         }
-        
-        return localToken;
+        return token;
     }
     
     @Override

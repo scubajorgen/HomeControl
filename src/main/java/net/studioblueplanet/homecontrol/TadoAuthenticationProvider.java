@@ -36,10 +36,8 @@ public class TadoAuthenticationProvider implements AuthenticationProvider
         TadoToken token =tado.authenticate(name, password);
         if (token!=null)
         {
-            // use the credentials
-            // and authenticate against the third-party system
-            return new UsernamePasswordAuthenticationToken(
-                    name, password, new ArrayList<>());
+            // use the credentials and authenticate against the third-party system
+            return new UsernamePasswordAuthenticationToken(name, password, new ArrayList<>());
         } 
         else
         {

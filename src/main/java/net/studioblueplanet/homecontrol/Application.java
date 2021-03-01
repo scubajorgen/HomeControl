@@ -5,13 +5,11 @@
  */
 package net.studioblueplanet.homecontrol;
 
-import java.io.File;
 import net.studioblueplanet.homecontrol.tado.TadoInterface;
 import net.studioblueplanet.homecontrol.tado.TadoInterfaceErrorHandling;
 import net.studioblueplanet.homecontrol.tado.TadoInterfaceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.CommandLineRunner;
