@@ -62,11 +62,13 @@
         response.accessibleHomes.forEach(element => 
         {
           html+='<div class="row">';
-          html+='<div class="col-sm-2"><b><i>'+element.name+'</i></b></div>';
+          html+='<div class="col-sm-2"><H5><i>'+element.name+'</i></H5></div>';
           html+='<div class="col-sm-2"><a href="javascript:loadHomeInfo('+element.id+',\''+element.name+
-                    '\');" role="button" class="btn btn-outline-success btn-block"><i class="fas fa-home"></i> Home </a></div>'+  
-                '<div class="col-sm-2"><a href="javascript:loadZoneInfo('+element.id+',\''+element.name+
+                    '\');" role="button" class="btn btn-outline-success btn-block"><i class="fas fa-home"></i> Home </a></div>';  
+          html+='<div class="col-sm-2"><a href="javascript:loadZoneInfo('+element.id+',\''+element.name+
                     '\');" role="button" class="btn btn-outline-success btn-block"><i class="fas fa-grip-horizontal"></i> Zones </a></div>';  
+          html+='<div class="col-sm-2"><a href="javascript:loadDeviceInfo('+element.id+',\''+element.name+
+          '\');" role="button" class="btn btn-outline-success btn-block"><i class="fas fa-tachometer-alt"></i> Devices </a></div>';  
           html+='</div><br>';
         });
         document.getElementById("accountInfo").innerHTML=html;
@@ -130,6 +132,7 @@
         $("#homeInfo").html(html);
         $('#zoneInfoContainer').hide();
         $('#homeInfoContainer').show();  
+        $('#deviceInfoContainer').hide();
         // Map
         if (marker != undefined) 
         {
@@ -181,17 +184,20 @@
         zones=response;
 
         html = '<table class="table">';
+        html += '<thead>';
         html += '<tr>';
-        html += '<td>Name</td>';
-        html += '<td>Zone</td>';
-        html += '<td>Power</td>';
-        html += '<td>Temperature</td>';
-        html += '<td>Temperature Setpoint</td>';
-        html += '<td>Humidity</td>';
-        html += '<td>Presence</td>';
-        html += '<td>Heating</td>';
-        html += '<td>Manual/Auto</td>';
+        html += '<th>Name</th>';
+        html += '<th>Zone</th>';
+        html += '<th>Power</th>';
+        html += '<th>Temperature</th>';
+        html += '<th>Temperature Setpoint</th>';
+        html += '<th>Humidity</th>';
+        html += '<th>Presence</th>';
+        html += '<th>Heating</th>';
+        html += '<th>Manual/Auto</th>';
         html += '</tr>';
+        html += '</thead>';
+        html += '<tbody>';
         for (i = 0; i < response.length; i++)
         {
           html += '<tr>';
@@ -249,10 +255,12 @@
 
           html += '</tr>';
         }
+        html += '<tbody>';
+        html += '</table>';
         $('#zoneInfo').html(html);
         $('#zoneInfoContainer').show();
         $('#homeInfoContainer').hide();
-
+        $('#deviceInfoContainer').hide();
       }
 
       /***********************************************************************************************\
@@ -287,6 +295,72 @@
         xhttp.open("GET", "/api/home/"+homeId+"/zones", true);
         xhttp.setRequestHeader("Content-type", "application/json");
         xhttp.send("");
+      }
+
+      /***********************************************************************************************\
+      *
+      \***********************************************************************************************/ 
+      function displayDeviceInfo(deviceInfo)
+      {
+        html = '<table class="table">';
+        html += '<thead>';
+        html += '<tr>';
+        html += '<th>Type</th>';
+        html += '<th>Serial</th>';
+        html += '<th>Connected</th>';
+        html += '<th>Last seen</th>';
+        html += '</tr>';
+        html += '</thead>';
+        html += '<tbody>';
+        for (i = 0; i < deviceInfo.length; i++)
+        {
+          html += '<tr>';
+          html += '<td>' + deviceInfo[i].deviceType + '</td>';
+          html += '<td>' + deviceInfo[i].serialNo + '</td>';   
+          html += '<td>' + deviceInfo[i].connected + '</td>';   
+          html += '<td>' + deviceInfo[i].lastConnected + '</td>';   
+          html += '</tr>';
+        }
+        html += '</tbody>';
+        html += '</table>';
+        $('#deviceInfo').html(html);
+        $('#zoneInfoContainer').hide();
+        $('#homeInfoContainer').hide();
+        $('#deviceInfoContainer').show();
+      }
+
+      /***********************************************************************************************\
+      *
+      \***********************************************************************************************/ 
+      function loadDeviceInfo(homeId, homeName)
+      {
+        theHomeId=homeId;
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function ()
+        {
+          if (this.readyState == 4 && this.status == 200)
+          {
+
+          }
+          if (this.readyState == 4) 
+          {
+              if (this.status == 200)
+              {
+                if (homeName!=null)
+                {
+                  $('#deviceInfoTitle').html('<H3>Devices for <i>'+homeName+'</i></H3>');
+                }
+                displayDeviceInfo(JSON.parse(this.responseText));
+              }
+              else
+              {
+                handleError(this.responseText);
+              }
+            }
+          };
+        xhttp.open("GET", "/api/home/"+homeId+"/devices", true);
+        xhttp.setRequestHeader("Content-type", "application/json");
+        xhttp.send("");    
       }
 
       /***********************************************************************************************\
@@ -472,10 +546,11 @@
           <div id="accountInfo"></div>
         </div>
       </div>
-    </div><br>
+    </div>
 
     <!-- Home info -->
     <div class="container-fluid" id="homeInfoContainer" style="display:none;">
+      <br>
       <div class="card">
         <div class="card-header" id="homeInfoTitle"><h3>Home</h3></div>
         <div class="card-body">
@@ -497,18 +572,29 @@
           </div>
         </div>
       </div>
-    </div><br> 
+    </div>
     
     <!-- Zone info -->
     <div class="container-fluid"  id="zoneInfoContainer" style="display:none;">
+      <br> 
       <div class="card">
         <div class="card-header" id="zoneInfoTitle"><h3>Zones</h3></div>
         <div class="card-body">
           <div id="zoneInfo"></div>
         </div>
       </div>
-    </div><br>
+    </div>
 
+    <!-- Device info -->
+    <div class="container-fluid"  id="deviceInfoContainer" style="display:none;">
+      <br>
+      <div class="card">
+        <div class="card-header" id="deviceInfoTitle"><h3>Devices</h3></div>
+        <div class="card-body">
+          <div id="deviceInfo"></div>
+        </div>
+      </div>
+    </div>    
 
     <!-- Edit Zone Modal -->
     <div id="zoneEditModal" class="modal fade" role="dialog">
