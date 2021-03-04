@@ -14,9 +14,13 @@ import java.util.stream.Collectors;
 
 import net.studioblueplanet.homecontrol.tado.entities.TadoAccount;
 import net.studioblueplanet.homecontrol.tado.entities.TadoDevice;
+import net.studioblueplanet.homecontrol.tado.entities.TadoEmail;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
+import net.studioblueplanet.homecontrol.tado.entities.TadoLanguage;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
+import net.studioblueplanet.homecontrol.tado.entities.TadoName;
 import net.studioblueplanet.homecontrol.tado.entities.TadoOverlay;
+import net.studioblueplanet.homecontrol.tado.entities.TadoPassword;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence;
 import net.studioblueplanet.homecontrol.tado.entities.TadoSetting;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
@@ -497,5 +501,70 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
             LOG.error("No account found for home {} requested by user {}", homeId, accountManager.loggedInUsername());
             throw new TadoException(TadoException.TadoExceptionType.APPLICATION_ERROR, "No account found for home "+homeId+". Unauthorized access.", 0);            
         }         
+    }
+
+    @Override
+    public TadoMe setName(TadoName name)
+    {
+        TadoAccount account=accountManager.loggedInAccount();
+        
+        LOG.info("Set name for user {} to {}", account.getUsername(), name.getName());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(account.getToken().getAccess_token());
+        HttpEntity<TadoName> entity = new HttpEntity<>(name, headers);
+        ResponseEntity<TadoMe> response = template.exchange("https://my.tado.com/api/v2/users/"+account.getUsername()+"/name", 
+                                               HttpMethod.PUT, entity, TadoMe.class); 
+        // Validate the name change
+        TadoMe me=response.getBody();        
+        if (!name.getName().equals(me.getName()))
+        {
+            throw new TadoException(TadoException.TadoExceptionType.APPLICATION_ERROR, "Setting name failed", 0);
+        }
+        return me;        
+    }
+    
+    @Override
+    public void setLanguage(TadoLanguage language)
+    {
+        TadoAccount account=accountManager.loggedInAccount();
+        
+        LOG.info("Set languave for user {} to {}", account.getUsername(), language.getLanguage());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(account.getToken().getAccess_token());
+        HttpEntity<TadoLanguage> entity = new HttpEntity<>(language, headers);
+        ResponseEntity response = template.exchange("https://my.tado.com/api/v2/users/"+account.getUsername()+"/language", 
+                                               HttpMethod.PUT, entity, String.class); 
+    }
+
+    public TadoMe setEmail(TadoEmail email)
+    {
+        TadoAccount account=accountManager.loggedInAccount();
+        
+        LOG.info("Set email for user {} to {}", account.getUsername(), email.getEmail());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(account.getToken().getAccess_token());
+        HttpEntity<TadoEmail> entity = new HttpEntity<>(email, headers);
+        ResponseEntity<TadoMe> response = template.exchange("https://my.tado.com/api/v2/users/"+account.getUsername()+"/email", 
+                                               HttpMethod.PUT, entity, TadoMe.class); 
+        // Validate the name change
+        TadoMe me=response.getBody();        
+        if (!email.getEmail().equals(me.getEmail()) || !email.getEmail().equals(me.getEmail()))
+        {
+            throw new TadoException(TadoException.TadoExceptionType.APPLICATION_ERROR, "Setting name failed", 0);
+        }
+        return me;          
+    }
+    
+    @Override
+    public void setPassword(TadoPassword password)
+    {
+        TadoAccount account=accountManager.loggedInAccount();
+        
+        LOG.info("Set password for user {} to ...", account.getUsername());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(account.getToken().getAccess_token());
+        HttpEntity<TadoPassword> entity = new HttpEntity<>(password, headers);
+        ResponseEntity response = template.exchange("https://my.tado.com/api/v2/users/"+account.getUsername()+"/password", 
+                                               HttpMethod.PUT, entity, String.class);         
     }
 }

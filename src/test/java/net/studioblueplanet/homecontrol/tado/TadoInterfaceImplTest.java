@@ -13,9 +13,13 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import net.studioblueplanet.homecontrol.tado.entities.TadoAccount;
 import net.studioblueplanet.homecontrol.tado.entities.TadoDevice;
+import net.studioblueplanet.homecontrol.tado.entities.TadoEmail;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
+import net.studioblueplanet.homecontrol.tado.entities.TadoLanguage;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
+import net.studioblueplanet.homecontrol.tado.entities.TadoName;
 import net.studioblueplanet.homecontrol.tado.entities.TadoOverlay;
+import net.studioblueplanet.homecontrol.tado.entities.TadoPassword;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence.TadoHomePresence;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
@@ -215,7 +219,7 @@ public class TadoInterfaceImplTest
                                    "grant_type=password&username="+URLEncoder.encode(username, StandardCharsets.UTF_8.toString())+"&password="+password+"&"+
                                    "client_secret=wZaRN7rpjn3FoNyF5IFuxg9uMzYJcvOoQ8QWiIqS3hfk6gLhVlG57j5YNoZL2Rtc";
 
-        String body = new String(Files.readAllBytes((new File("src/test/resources/tadoToken.json")).toPath()));        
+        String body = "{\"error\": \"invalid_grant\", \"error_description\": \"Bad credentials\"}";        
         mockServer.expect(ExpectedCount.once(), 
           requestTo(new URI("https://auth.tado.com/oauth/token")))
           .andExpect(method(HttpMethod.POST))
@@ -355,7 +359,7 @@ public class TadoInterfaceImplTest
           .body(body)
         );               
         exceptionRule.expect(TadoException.class);
-        exceptionRule.expectMessage("Client error: Tado reported: 401-Unauthorized");        
+        exceptionRule.expectMessage("Client error: Tado reported: 401 - Bad credentials");        
         TadoMe result = tadoInterface.tadoMe();
         mockServer.verify();
     }
@@ -419,7 +423,7 @@ public class TadoInterfaceImplTest
         authenticate();
 
         mockServer.reset();
-        String body = new String(Files.readAllBytes((new File("src/test/resources/tadoHome.json")).toPath()));
+        String body = "{\"errors\": [{\"code\":\"notFound\",\"title\": \"home 123456 not found\"}]}";
         mockServer.expect(ExpectedCount.once(), 
           requestTo(new URI("https://my.tado.com/api/v2/homes/123456")))
           .andExpect(method(HttpMethod.GET))
@@ -428,7 +432,7 @@ public class TadoInterfaceImplTest
           .body(body)
         );   
         exceptionRule.expect(TadoException.class);
-        exceptionRule.expectMessage("Client error: Tado reported: 404-Not Found");
+        exceptionRule.expectMessage("Client error: Tado reported: 404 - home 123456 not found");
             
         TadoHome result = tadoInterface.tadoHome(123456);
     }
@@ -532,7 +536,7 @@ public class TadoInterfaceImplTest
         );                                   
             
         exceptionRule.expect(TadoException.class);
-        exceptionRule.expectMessage("Client error: Tado reported: 404-Not Found");
+        exceptionRule.expectMessage("Client error: Tado reported: 404 - home 123456 not found");
         List<TadoZone> result = tadoInterface.tadoZones(123456);
     }
     
@@ -786,7 +790,8 @@ public class TadoInterfaceImplTest
         assertEquals(1799, response.getTermination().getRemainingTimeInSeconds().intValue());
         assertEquals("2021-02-15 07:52:14", dateFormat.format(response.getTermination().getExpiry()));
         assertEquals("2021-02-15 07:52:14", dateFormat.format(response.getTermination().getProjectedExpiry()));
-    }
+        mockServer.verify();
+   }
 
     /**
      * Test of setTadoOverlay method, of class TadoInterfaceImpl.
@@ -822,6 +827,7 @@ public class TadoInterfaceImplTest
         assertNull(response.getTermination().getRemainingTimeInSeconds());
         assertNull(response.getTermination().getExpiry());
         assertNull(response.getTermination().getProjectedExpiry());
+        mockServer.verify();
     }
 
     /**
@@ -858,6 +864,7 @@ public class TadoInterfaceImplTest
         assertEquals(30408, response.getTermination().getRemainingTimeInSeconds().intValue());
         assertEquals("2021-02-15 16:00:00", dateFormat.format(response.getTermination().getExpiry()));
         assertEquals("2021-02-15 16:00:00", dateFormat.format(response.getTermination().getProjectedExpiry()));
+        mockServer.verify();
     }    
 
     /**
@@ -893,6 +900,7 @@ public class TadoInterfaceImplTest
         assertEquals(2687, response.getTermination().getRemainingTimeInSeconds().intValue());
         assertEquals("2021-02-18 21:00:00", dateFormat.format(response.getTermination().getExpiry()));
         assertEquals("2021-02-18 21:00:00", dateFormat.format(response.getTermination().getProjectedExpiry()));
+        mockServer.verify();
     }
 
     /**
@@ -929,6 +937,137 @@ public class TadoInterfaceImplTest
         assertNull(response.getTermination().getRemainingTimeInSeconds());
         assertNull(response.getTermination().getExpiry());
         assertNull(response.getTermination().getProjectedExpiry());
+        mockServer.verify();
     }
 
+    /**
+     * Test of setName method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testSetName() throws Exception
+    {
+        System.out.println("setName");
+
+        mockServer.reset();
+        String expectedRequestBody = "{\"name\":\"User name\"}";
+        String responseBody = new String(Files.readAllBytes((new File("src/test/resources/tadoMe.json")).toPath()));
+        
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/users/user@email.com/name")))
+          .andExpect(method(HttpMethod.PUT))
+          .andExpect(content().string(expectedRequestBody))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(responseBody)
+        );          
+        
+        TadoName name=new TadoName("User name");
+        TadoMe response=tadoInterface.setName(name);
+        assertEquals("User name", response.getName());
+        mockServer.verify();
+    }
+    /**
+     * Test of setName method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testSetName_fail() throws Exception
+    {
+        System.out.println("setName");
+
+    
+        mockServer.reset();
+        String expectedRequestBody = "{\"name\":\"User name fail\"}";
+        String responseBody = new String(Files.readAllBytes((new File("src/test/resources/tadoMe.json")).toPath()));
+        
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/users/user@email.com/name")))
+          .andExpect(method(HttpMethod.PUT))
+          .andExpect(content().string(expectedRequestBody))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(responseBody)
+        );  
+
+        exceptionRule.expect(TadoException.class);
+        exceptionRule.expectMessage("Application error: Setting name failed");        
+        TadoName name=new TadoName("User name fail");
+        TadoMe   response=tadoInterface.setName(name);
+    }
+
+    /**
+     * Test of setLanguage method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testSetLanguage() throws Exception
+    {
+        System.out.println("setName");
+
+        mockServer.reset();
+        String expectedRequestBody = "{\"language\":\"en\"}";
+        String responseBody = "";
+        
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/users/user@email.com/language")))
+          .andExpect(method(HttpMethod.PUT))
+          .andExpect(content().string(expectedRequestBody))
+          .andRespond(withStatus(HttpStatus.NO_CONTENT)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(responseBody)
+        );          
+        
+        TadoLanguage lang=new TadoLanguage(TadoLanguage.ENGHLISH);
+        tadoInterface.setLanguage(lang);
+        mockServer.verify();
+    }
+
+    /**
+     * Test of setName method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testSetEmail() throws Exception
+    {
+        System.out.println("setName");
+
+        mockServer.reset();
+        String expectedRequestBody = "{\"email\":\"user@email.com\",\"currentPassword\":\"password\"}";
+        String responseBody = new String(Files.readAllBytes((new File("src/test/resources/tadoMe.json")).toPath()));
+        
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/users/user@email.com/email")))
+          .andExpect(method(HttpMethod.PUT))
+          .andExpect(content().string(expectedRequestBody))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(responseBody)
+        );          
+        
+        TadoEmail email=new TadoEmail("user@email.com", "password");
+        TadoMe response=tadoInterface.setEmail(email);
+        mockServer.verify();
+    }
+
+    /**
+     * Test of setPassword method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testSetPassword() throws Exception
+    {
+        System.out.println("setName");
+
+        mockServer.reset();
+        String expectedRequestBody = "{\"password\":\"newpassword\",\"currentPassword\":\"oldpassword\"}";
+        String responseBody = "";
+        
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/users/user@email.com/password")))
+          .andExpect(method(HttpMethod.PUT))
+          .andExpect(content().string(expectedRequestBody))
+          .andRespond(withStatus(HttpStatus.NO_CONTENT)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(responseBody)
+        );          
+        
+        tadoInterface.setPassword(new TadoPassword("newpassword","oldpassword"));
+        mockServer.verify();
+    }
 }

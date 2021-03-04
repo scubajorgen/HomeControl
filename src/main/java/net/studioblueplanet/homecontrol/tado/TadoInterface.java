@@ -6,12 +6,15 @@
 package net.studioblueplanet.homecontrol.tado;
 
 import java.util.List;
-import net.studioblueplanet.homecontrol.tado.entities.TadoAccount;
 
 import net.studioblueplanet.homecontrol.tado.entities.TadoDevice;
+import net.studioblueplanet.homecontrol.tado.entities.TadoEmail;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
+import net.studioblueplanet.homecontrol.tado.entities.TadoLanguage;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
+import net.studioblueplanet.homecontrol.tado.entities.TadoName;
 import net.studioblueplanet.homecontrol.tado.entities.TadoOverlay;
+import net.studioblueplanet.homecontrol.tado.entities.TadoPassword;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence.TadoHomePresence;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
@@ -130,4 +133,32 @@ public interface TadoInterface
      * @return List of devices
      */
     public List<TadoDevice> tadoDevices(int homeId);
+    
+    /**
+     * Change the name of the user registered with the account
+     * @param name The name of the user
+     * @return TadoMe instance
+     */
+    public TadoMe           setName(TadoName name);
+    
+    /**
+     * Set the language for the user
+     * @param language The language
+     */
+    public void             setLanguage(TadoLanguage language);
+    
+    /**
+     * Sets the email of the user. The email is also used as the 
+     * username, e.g. for logging in 
+     * @param email Email
+     * @return TadoMe instance containing the changed email
+     */
+    public TadoMe           setEmail(TadoEmail email);
+
+    /**
+     * Sets the password
+     * @param password The password
+     */
+    public void             setPassword(TadoPassword password);
+
 }
