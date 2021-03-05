@@ -7,11 +7,15 @@ package net.studioblueplanet.homecontrol.tado;
 
 
 import java.text.SimpleDateFormat;
+import java.util.Iterator;
+import java.util.List;
 import java.util.TimeZone;
 
 import net.studioblueplanet.homecontrol.Application;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
+import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
+import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -96,6 +100,8 @@ public class TadoIntegrationTest
         if (!authenticated && integrationTestEnabled)
         {
             token=tadoInterface.authenticate(username, password);
+            // Make sure the account information is coupled to the account
+            //tadoInterface.tadoMe();
             if (token!=null)
             {
                 authenticated=true;
@@ -135,4 +141,39 @@ public class TadoIntegrationTest
         System.out.println("TadoMe retrieved for user "+me.getName());
         assertEquals(homeId, me.getHomes().get(0).getId());
     }    
+    
+    /**
+     * Test of tadoHome method, of class TadoInterfaceImpl.
+     */
+    @Test
+    @WithTadoUser
+    public void testTadoHome() throws Exception
+    {
+        assumeTrue(integrationTestEnabled);
+        System.out.println("### tadoHome");
+        // TO DO: WHY IS NEXT STATEMENT NEEDED???
+        tadoInterface.tadoMe();
+        TadoHome home=tadoInterface.tadoHome(homeId);
+        assertNotNull(home);
+        System.out.println("TadoHome retrieved called "+home.getName());
+        assertEquals(homeId, home.getId());
+    }        
+
+    /**
+     * Test of tadoHome method, of class TadoInterfaceImpl.
+     */
+    @Test
+    @WithTadoUser
+    public void testTadoZones() throws Exception
+    {
+        assumeTrue(integrationTestEnabled);
+        System.out.println("### tadoZones");
+        // TO DO: WHY IS NEXT STATEMENT NEEDED???
+        tadoInterface.tadoMe();
+        List<TadoZone> zones=tadoInterface.tadoZones(homeId);
+        assertNotNull(zones);
+        System.out.println("TadoZones retrieved: Number of zones "+zones.size());
+        zones.stream().forEach(zone -> System.out.println(zone.getName()+" - "+zone.getType()));
+    }        
+
 }
