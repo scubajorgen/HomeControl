@@ -17,6 +17,7 @@ import net.studioblueplanet.homecontrol.tado.entities.TadoOverlay;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPassword;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence.TadoHomePresence;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
+import net.studioblueplanet.homecontrol.tado.entities.TadoTimeTable;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZoneState;
@@ -160,5 +161,22 @@ public interface TadoInterface
      * @param password The password
      */
     public void             setPassword(TadoPassword password);
+    
+    /**
+     * Get the available time table types for this zone. Usually:
+     * 0 - ONE_DAY, 1 - THREE_DAY or 2 - SEVEN_DAY
+     * @param homeId Home ID
+     * @param zoneId Zone ID
+     * @return List of available time tables type
+     */
+    public List<TadoTimeTable>  timeTables(int homeId, int zoneId);
+    
+    /**
+     * Get the chosen time table type for this zone
+     * @param homeId Home ID
+     * @param zoneId Zone ID
+     * @return The chosen time table type
+     */
+    public TadoTimeTable        activeTimeTable(int homeId, int zoneId);
 
 }
