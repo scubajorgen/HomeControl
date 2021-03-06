@@ -107,14 +107,14 @@ public interface TadoInterface
     public TadoOverlay      setTadoOverlay(int homeId, int zoneId, TadoOverlay overlay);
 
     /**
-     * 
-     * @param homeId
-     * @param zoneId
-     * @param type
-     * @param power
-     * @param temperature
-     * @param termination
-     * @param timerSeconds 
+     * Overrules the automatic settings of a zone by setting an overlay
+     * @param homeId Home ID
+     * @param zoneId Zone ID
+     * @param type HEATING for heating zones, HOT_WATER for hot water zone
+     * @param power ON or OFF to switch the zone on or off
+     * @param temperature Temperature in Celsius
+     * @param termination Termination: MANUAL, TIMER, NEXT_TIME_BLOCK
+     * @param timerSeconds In case of TIMER: the timeout seconds
      * @return The overlay as obtained as response from Tado
      */
      public TadoOverlay setTadoOverlay(int homeId, int zoneId, String type, String power, double temperature, String termination, int timerSeconds);

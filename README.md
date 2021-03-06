@@ -49,5 +49,8 @@ authentication server of Tado.
 
 ## Integration testing
 Adapt the file /src/test/resources/application.properties to enable integration
-testing with Tado. The test requires your account, home ID and zone IDs.
+testing with Tado. The test requires your account credentials, home ID and zone IDs.
 The interation test itself are in /src/test/java/net/studioblueplanet/homecontrol/tado/TadoIntegrationTest.java.
+You can put your own version of application.properties in the root directory of the project
+to prevent your credentials to accidentally end up in the git repo. This version overrules the version
+in /src/test/resources.

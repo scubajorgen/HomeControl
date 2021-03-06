@@ -7,20 +7,25 @@ package net.studioblueplanet.homecontrol.tado;
 
 
 import java.text.SimpleDateFormat;
-import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
 
 import net.studioblueplanet.homecontrol.Application;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
+import net.studioblueplanet.homecontrol.tado.entities.TadoOverlay;
+import net.studioblueplanet.homecontrol.tado.entities.TadoPresence;
+import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
+import net.studioblueplanet.homecontrol.tado.entities.TadoZoneState;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.runners.MethodSorters;
 import org.junit.Rule;
 import org.junit.runner.RunWith;
 import org.junit.Test;
@@ -35,7 +40,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
 /**
- *
+ * Integration test with the Tado API. In order to execute the test
+ * modify application.properties: enable the test and provide credentials.
+ * Note; this may disrupt your Tado operation.
  * @author jorgen
  */
 @RunWith(SpringRunner.class)
@@ -45,19 +52,20 @@ import org.springframework.web.client.RestTemplate;
  *
  * @author jorgen
  */
+@FixMethodOrder(MethodSorters.DEFAULT)
 public class TadoIntegrationTest
 {
     private static boolean          authenticated=false;
+
+    private static SimpleDateFormat dateFormat;
+    
+    private static TadoToken        token;
     
     @Autowired
     private TadoInterface           tadoInterface;
     
     @Autowired
     private RestTemplate            restTemplate;
-    
-    private static SimpleDateFormat dateFormat;
-    
-    private TadoToken               token;
     
     @Value("${enableTadoIntegrationTest}")
     private boolean integrationTestEnabled;
@@ -101,9 +109,10 @@ public class TadoIntegrationTest
         {
             token=tadoInterface.authenticate(username, password);
             // Make sure the account information is coupled to the account
-            //tadoInterface.tadoMe();
+            tadoInterface.tadoMe();
             if (token!=null)
             {
+                System.out.println("Authenticated. Token aquired: expires "+dateFormat.format(token.getAccessTokenExpires()));
                 authenticated=true;
             }
         }
@@ -121,7 +130,7 @@ public class TadoIntegrationTest
     @Test
     public void testAuthenticate() throws Exception
     {
-        assumeTrue(integrationTestEnabled);
+        assumeTrue("Integration test disabled, test not executed", integrationTestEnabled);
         System.out.println("### Authenticate");
         assertNotNull(token);
         System.out.println("Token aquired: expires "+dateFormat.format(token.getAccessTokenExpires()));
@@ -134,7 +143,7 @@ public class TadoIntegrationTest
     @WithTadoUser
     public void testTadoMe() throws Exception
     {
-        assumeTrue(integrationTestEnabled);
+        assumeTrue("Integration test disabled, test not executed", integrationTestEnabled);
         System.out.println("### tadoMe");
         TadoMe me=tadoInterface.tadoMe();
         assertNotNull(me);
@@ -149,10 +158,8 @@ public class TadoIntegrationTest
     @WithTadoUser
     public void testTadoHome() throws Exception
     {
-        assumeTrue(integrationTestEnabled);
+        assumeTrue("Integration test disabled, test not executed", integrationTestEnabled);
         System.out.println("### tadoHome");
-        // TO DO: WHY IS NEXT STATEMENT NEEDED???
-        tadoInterface.tadoMe();
         TadoHome home=tadoInterface.tadoHome(homeId);
         assertNotNull(home);
         System.out.println("TadoHome retrieved called "+home.getName());
@@ -166,14 +173,142 @@ public class TadoIntegrationTest
     @WithTadoUser
     public void testTadoZones() throws Exception
     {
-        assumeTrue(integrationTestEnabled);
+        assumeTrue("Integration test disabled, test not executed", integrationTestEnabled);
         System.out.println("### tadoZones");
-        // TO DO: WHY IS NEXT STATEMENT NEEDED???
-        tadoInterface.tadoMe();
         List<TadoZone> zones=tadoInterface.tadoZones(homeId);
         assertNotNull(zones);
         System.out.println("TadoZones retrieved: Number of zones "+zones.size());
         zones.stream().forEach(zone -> System.out.println(zone.getName()+" - "+zone.getType()));
     }        
+
+    /**
+     * Test of tadoPresence method, of class TadoInterfaceImpl.
+     */
+    @Test
+    @WithTadoUser
+    public void testTadoPresence() throws Exception
+    {
+        assumeTrue("Integration test disabled, test not executed", integrationTestEnabled);
+        System.out.println("### tadoPresence");
+        TadoState presence=tadoInterface.tadoPresence(homeId);
+        assertNotNull(presence);
+        System.out.println("Tado Presence retrieved: you are "+presence.getPresence());
+    }  
+
+    /**
+     * Test of tadoZoneState method, of class TadoInterfaceImpl.
+     */
+    @Test
+    @WithTadoUser
+    public void testTadoZoneState() throws Exception
+    {
+        assumeTrue("Integration test disabled, test not executed", integrationTestEnabled);
+        System.out.println("### tadoZoneState");
+        TadoZoneState state=tadoInterface.tadoZoneState(homeId, heatingZoneId);
+        assertNotNull(state);
+        System.out.println("Tado ZoneState retrieved: Zone "+state.getSetting().getType()+" Temperature "+state.getSetting().getTemperature().getCelsius());
+    }  
+
+    /**
+     * Test of tadoZoneState method, of class TadoInterfaceImpl.
+     */
+    @Test
+    @WithTadoUser
+    public void testSetPresence() throws Exception
+    {
+        assumeTrue("Integration test disabled, test not executed", integrationTestEnabled);
+        System.out.println("### setTadoPresence");
+        TadoState presenceBackup=tadoInterface.tadoPresence(homeId);
+        assertNotNull(presenceBackup);
+        assertTrue(presenceBackup.getPresence().equals("HOME") || presenceBackup.getPresence().equals("AWAY"));
+        System.out.println("Presence backup: "+presenceBackup.getPresence());
+        
+        TadoState readback;
+        if (presenceBackup.getPresence().equals("HOME"))
+        {
+            tadoInterface.setTadoPresence(homeId, TadoPresence.TadoHomePresence.AWAY);
+            readback=tadoInterface.tadoPresence(homeId);
+            assertNotNull(readback);
+            assertTrue(readback.getPresence().equals("AWAY"));
+        }
+        else
+        {
+            tadoInterface.setTadoPresence(homeId, TadoPresence.TadoHomePresence.HOME);
+            readback=tadoInterface.tadoPresence(homeId);
+            assertNotNull(readback);
+            assertTrue(readback.getPresence().equals("HOME"));
+        }
+        System.out.println("Presence set to "+readback.getPresence());
+
+        if (presenceBackup.getPresence().equals("HOME"))
+        {
+            tadoInterface.setTadoPresence(homeId, TadoPresence.TadoHomePresence.HOME);
+            readback=tadoInterface.tadoPresence(homeId);
+            assertNotNull(readback);
+            assertTrue(readback.getPresence().equals("HOME"));
+        }
+        else
+        {
+            tadoInterface.setTadoPresence(homeId, TadoPresence.TadoHomePresence.AWAY);
+            readback=tadoInterface.tadoPresence(homeId);
+            assertNotNull(readback);
+            assertTrue(readback.getPresence().equals("AWAY"));
+        }
+        System.out.println("Presence set back to "+readback.getPresence());
+
+    }  
+
+    /**
+     * Test of tadoOverlay method, of class TadoInterfaceImpl.
+     */
+    @Test
+    @WithTadoUser
+    public void testTadoOverlay() throws Exception
+    {
+        assumeTrue("Integration test disabled, test not executed", integrationTestEnabled);
+        System.out.println("### tadoOverlay, setTadoOverlay, deleteTadoOverlay");
+
+        // We assume no overlay has been set. Therefore a 404 exception
+        String message=null;
+        try
+        {
+            TadoOverlay overlay=tadoInterface.tadoOverlay(homeId, heatingZoneId);
+        }
+        catch (TadoException e)
+        {
+            message=e.getMessage();
+        }
+        if (!("Client error: Tado reported: 404 - overlay of zone "+heatingZoneId+" not found").equals(message))
+        {
+            System.out.println("Test aborted. Manual control already set to HEATING test zone. Set to auto and retry.");
+        }
+        assumeTrue(("Client error: Tado reported: 404 - overlay of zone "+heatingZoneId+" not found").equals(message));
+            
+        // Set an overlay
+        TadoOverlay result=tadoInterface.setTadoOverlay(homeId, heatingZoneId, "HEATING", "ON", 23.4, "MANUAL", 0);
+        assertEquals(23.4, result.getSetting().getTemperature().getCelsius(), 0.01);
+        assertEquals("MANUAL", result.getType());
+
+        // Read it back
+        result=tadoInterface.tadoOverlay(homeId, heatingZoneId);
+        assertNotNull(result);
+        assertEquals(23.4, result.getSetting().getTemperature().getCelsius(), 0.01);
+        assertEquals("MANUAL", result.getType());
+        
+        // Delete
+        tadoInterface.deleteTadoOverlay(homeId, heatingZoneId);
+
+        // We assume no overlay has been set. Therefore a 404 exception
+        message=null;
+        try
+        {
+            TadoOverlay overlay=tadoInterface.tadoOverlay(homeId, heatingZoneId);
+        }
+        catch (TadoException e)
+        {
+            message=e.getMessage();
+        }
+        assertEquals(("Client error: Tado reported: 404 - overlay of zone "+heatingZoneId+" not found"), message);
+    }  
 
 }
