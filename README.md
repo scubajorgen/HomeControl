@@ -54,3 +54,8 @@ The interation test itself are in /src/test/java/net/studioblueplanet/homecontro
 You can put your own version of application.properties in the root directory of the project
 to prevent your credentials to accidentally end up in the git repo. This version overrules the version
 in /src/test/resources.
+
+**Warning** _The integration tests temporarily modify your username/email and password. Though they are reset
+to the original values, failing tests may lock you out from your Tado account. When this happens, preserve the 
+logging of the test. It displays the altered username/email and password. They can be used to manually restore
+your username/email or password. If you don't understand the tests, don't enable them._

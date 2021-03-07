@@ -7,13 +7,18 @@ package net.studioblueplanet.homecontrol.tado;
 
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
 import net.studioblueplanet.homecontrol.Application;
+import net.studioblueplanet.homecontrol.tado.entities.TadoDevice;
+import net.studioblueplanet.homecontrol.tado.entities.TadoEmail;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
+import net.studioblueplanet.homecontrol.tado.entities.TadoName;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
 import net.studioblueplanet.homecontrol.tado.entities.TadoOverlay;
+import net.studioblueplanet.homecontrol.tado.entities.TadoPassword;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
@@ -31,13 +36,23 @@ import org.junit.runner.RunWith;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.client.RestTemplate;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+
 
 /**
  * Integration test with the Tado API. In order to execute the test
@@ -64,11 +79,11 @@ public class TadoIntegrationTest
     @Autowired
     private TadoInterface           tadoInterface;
     
-    @Autowired
-    private RestTemplate            restTemplate;
-    
     @Value("${enableTadoIntegrationTest}")
     private boolean integrationTestEnabled;
+    
+    @Value("${skipCredentialsTests}")
+    private boolean skipCredentialsTests;
     
     @Value("${tadoUsername}")
     private String username;
@@ -94,7 +109,6 @@ public class TadoIntegrationTest
     {
         dateFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-        
     }
     
     @AfterClass
@@ -115,6 +129,10 @@ public class TadoIntegrationTest
                 System.out.println("Authenticated. Token aquired: expires "+dateFormat.format(token.getAccessTokenExpires()));
                 authenticated=true;
             }
+        }
+        if (!integrationTestEnabled)
+        {
+            System.out.println("### Integration test skipped because they are disabled. Enable in application.properties.");
         }
     }
     
@@ -311,4 +329,118 @@ public class TadoIntegrationTest
         assertEquals(("Client error: Tado reported: 404 - overlay of zone "+heatingZoneId+" not found"), message);
     }  
 
+    /**
+     * Test of tadoZoneState method, of class TadoInterfaceImpl.
+     */
+    @Test
+    @WithTadoUser
+    public void testTadoDevices() throws Exception
+    {
+        assumeTrue("Integration test disabled, test not executed", integrationTestEnabled);
+        System.out.println("### tadoDevices");
+        List<TadoDevice> devices=tadoInterface.tadoDevices(homeId);
+        assertNotNull(devices);
+        System.out.println("Tado Device list retrieved: Number of devices "+devices.size());
+        devices.stream().forEach(d -> System.out.println("Device: "+d.getSerialNo()));
+    }      
+
+    /**
+     * Test of tadoZoneState method, of class TadoInterfaceImpl.
+     */
+    @Test
+    @WithTadoUser(username="")
+    public void testSetName() throws Exception
+    {
+        assumeTrue("Integration test disabled, test not executed", integrationTestEnabled);
+        System.out.println("### setName");
+        TadoMe backup=tadoInterface.tadoMe();
+        assertNotNull(backup);
+        System.out.println("Current name: "+backup.getName());
+        
+        String temporaryName="John Doe";
+        System.out.println("Setting name to: "+temporaryName);
+        TadoMe result=tadoInterface.setName(new TadoName(temporaryName));
+        assertEquals(temporaryName, result.getName());
+
+        System.out.println("Setting name to: "+backup.getName());
+        result=tadoInterface.setName(new TadoName(backup.getName()));
+        assertEquals(backup.getName(), result.getName());
+        System.out.println("Name set to: "+result.getName());
+    } 
+
+    /**
+     * Test of setEmail method, of class TadoInterfaceImpl.
+     */
+    @Test
+    @WithTadoUser
+    public void testSetEmail() throws Exception
+    {
+        TadoToken localToken;
+
+        assumeTrue("Integration test disabled, test not executed", integrationTestEnabled);
+        assumeFalse("Skipping credentials tests", skipCredentialsTests);
+        System.out.println("### setEmail");
+        TadoMe backup=tadoInterface.tadoMe();
+        assertNotNull(backup);
+        System.out.println("Current email: "+backup.getEmail()+", current username: "+backup.getUsername());
+        
+        String temporaryEmail="johntadoe@gmail.com";
+        System.out.println("Setting email to: "+temporaryEmail);
+        TadoMe result=tadoInterface.setEmail(new TadoEmail(temporaryEmail, password));
+        assertEquals(temporaryEmail, result.getEmail());
+        assertEquals(temporaryEmail, result.getUsername());
+
+        // Change the logged in user in the Spring security context
+        User principal =new User(temporaryEmail, password, new ArrayList<GrantedAuthority>());
+        Authentication auth = new UsernamePasswordAuthenticationToken(principal, "password", principal.getAuthorities());
+        SecurityContext sc = SecurityContextHolder.getContext();
+        sc.setAuthentication(auth);        
+        
+        // Authenticate at Tado
+        localToken=tadoInterface.authenticate(temporaryEmail, password);
+        assertNotNull(localToken);
+        
+        System.out.println("Setting eamil to: "+backup.getEmail());
+        result=tadoInterface.setEmail(new TadoEmail(backup.getEmail(), password));
+        assertEquals(backup.getEmail(), result.getEmail());
+        assertEquals(backup.getEmail(), result.getUsername());
+        System.out.println("Eamil set to: "+result.getEmail()+", username is: "+result.getUsername());
+
+        // Change the logged in user in the Spring security context
+        principal =new User(temporaryEmail, password, new ArrayList<GrantedAuthority>());
+        auth = new UsernamePasswordAuthenticationToken(principal, "password", principal.getAuthorities());
+        sc = SecurityContextHolder.getContext();
+        sc.setAuthentication(auth);        
+
+        tadoInterface.authenticate(username, password);
+        assertNotNull(localToken);
+    } 
+
+    /**
+     * Test of setPassword method, of class TadoInterfaceImpl.
+     */
+    @Test
+    @WithTadoUser
+    public void testSetPassword() throws Exception
+    {
+        TadoToken localToken;
+
+        assumeTrue("Integration test disabled, test not executed", integrationTestEnabled);
+        assumeFalse("Skipping credentials tests", skipCredentialsTests);
+        System.out.println("### setPassword");
+        
+        String temporaryPassword="TempPasword123$#";
+        System.out.println("Setting password to: "+temporaryPassword);
+        tadoInterface.setPassword(new TadoPassword(temporaryPassword, password));
+        // Authenticate at Tado
+        localToken=tadoInterface.authenticate(username, temporaryPassword);
+        assertNotNull(localToken);
+        
+        System.out.println("Setting password to original password: "+password);
+        tadoInterface.setPassword(new TadoPassword(password, temporaryPassword));
+        // Authenticate at Tado
+        localToken=tadoInterface.authenticate(username, password);
+        assertNotNull(localToken);
+
+    }     
 }

@@ -530,11 +530,12 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
         ResponseEntity<TadoMe> response = template.exchange("https://my.tado.com/api/v2/users/"+account.getUsername()+"/name", 
                                                HttpMethod.PUT, entity, TadoMe.class); 
         // Validate the name change
-        TadoMe me=response.getBody();        
+        TadoMe me=response.getBody();   
         if (!name.getName().equals(me.getName()))
         {
             throw new TadoException(TadoException.TadoExceptionType.APPLICATION_ERROR, "Setting name failed", 0);
         }
+        account.setTadoMe(me);
         return me;        
     }
     
@@ -567,6 +568,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
         {
             throw new TadoException(TadoException.TadoExceptionType.APPLICATION_ERROR, "Setting name failed", 0);
         }
+        account.setTadoMe(me);
         return me;          
     }
     
