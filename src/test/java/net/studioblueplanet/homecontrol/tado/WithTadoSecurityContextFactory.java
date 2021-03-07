@@ -32,8 +32,7 @@ public class WithTadoSecurityContextFactory implements WithSecurityContextFactor
         SecurityContext context = SecurityContextHolder.createEmptyContext();
 
         User principal =new User(username, password, new ArrayList<GrantedAuthority>());
-        Authentication auth =
-                new UsernamePasswordAuthenticationToken(principal, "password", principal.getAuthorities());
+        Authentication auth = new UsernamePasswordAuthenticationToken(principal, "password", principal.getAuthorities());
         context.setAuthentication(auth);
         return context;
     }

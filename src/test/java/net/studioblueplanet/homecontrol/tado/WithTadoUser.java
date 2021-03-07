@@ -21,4 +21,6 @@ public @interface WithTadoUser
 	String username() default "tadoUser";
 
 	String name() default "Tado the User";    
+        
+        String password() default "password";
 }

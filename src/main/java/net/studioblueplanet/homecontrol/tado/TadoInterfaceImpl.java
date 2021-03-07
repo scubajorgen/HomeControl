@@ -345,7 +345,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
 
         if (account!=null)
         {
-            LOG.info("Set Tado PRESENCE for user {}, home {}", account.getUsername(), homeId);
+            LOG.info("Set Tado PRESENCE for user {}, home {}: {}", account.getUsername(), homeId, presence.toString());
             TadoPresence thePresence;
 
             HttpHeaders headers             = new HttpHeaders();
@@ -367,9 +367,24 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     public TadoOverlay tadoOverlay(int homeId, int zoneId)
     {
         TadoAccount account=accountManager.findAccount(homeId);
+        TadoOverlay overlay=null;
 
-        LOG.info("Request Tado OVERLAY for user {}, home {}, zone {}", account.getUsername(), homeId, zoneId);
-        return null;
+        if (account!=null)
+        {
+            LOG.info("Request Tado OVERLAY for user {}, home {}, zone {}", account.getUsername(), homeId, zoneId);
+            HttpHeaders headers             = new HttpHeaders();
+            headers.setBearerAuth(account.getToken().getAccess_token());
+            HttpEntity entity               = new HttpEntity(headers);
+            ResponseEntity<TadoOverlay> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/zones/"+zoneId+"/overlay", 
+                                                                       HttpMethod.GET, entity, TadoOverlay.class);        
+            overlay=response.getBody();
+        }
+        else
+        {
+            LOG.error("No account found for home {} requested by user {}", homeId, accountManager.loggedInUsername());
+            throw new TadoException(TadoException.TadoExceptionType.APPLICATION_ERROR, "No account found for home "+homeId+". Unauthorized access.", 0);            
+        } 
+        return overlay;            
     }
     
     @Override
@@ -516,11 +531,12 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
         ResponseEntity<TadoMe> response = template.exchange("https://my.tado.com/api/v2/users/"+account.getUsername()+"/name", 
                                                HttpMethod.PUT, entity, TadoMe.class); 
         // Validate the name change
-        TadoMe me=response.getBody();        
+        TadoMe me=response.getBody();   
         if (!name.getName().equals(me.getName()))
         {
             throw new TadoException(TadoException.TadoExceptionType.APPLICATION_ERROR, "Setting name failed", 0);
         }
+        account.setTadoMe(me);
         return me;        
     }
     
@@ -553,6 +569,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
         {
             throw new TadoException(TadoException.TadoExceptionType.APPLICATION_ERROR, "Setting name failed", 0);
         }
+        account.setTadoMe(me);
         return me;          
     }
     
