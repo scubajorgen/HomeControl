@@ -21,7 +21,9 @@ import net.studioblueplanet.homecontrol.tado.entities.TadoName;
 import net.studioblueplanet.homecontrol.tado.entities.TadoOverlay;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPassword;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence.TadoHomePresence;
+import net.studioblueplanet.homecontrol.tado.entities.TadoScheduleBlock;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
+import net.studioblueplanet.homecontrol.tado.entities.TadoTimeTable;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZoneState;
@@ -40,7 +42,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.client.ExpectedCount;
 import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
@@ -1068,6 +1069,90 @@ public class TadoInterfaceImplTest
         );          
         
         tadoInterface.setPassword(new TadoPassword("newpassword","oldpassword"));
+        mockServer.verify();
+    }
+        
+    /**
+     * Test of tadoTimeTables method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testTadoTimeTables() throws Exception
+    {
+        System.out.println("tadoTimeTables");
+
+        mockServer.reset();
+        String body = new String(Files.readAllBytes((new File("src/test/resources/tadoTimeTables.json")).toPath()));
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/zones/0/schedule/timetables")))
+          .andExpect(method(HttpMethod.GET))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(body)
+        );                                   
+            
+        List<TadoTimeTable> result = tadoInterface.tadoTimeTables(123456, 0);
+        assertNotNull(result);
+        assertEquals(3, result.size());
+        assertEquals(0, result.get(0).getId());
+        assertEquals("THREE_DAY", result.get(1).getType());
+        mockServer.verify();
+    }
+
+    /**
+     * Test of tadoTimeTables method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testTadoActiveTimeTable() throws Exception
+    {
+        System.out.println("tadoActiveTimeTable");
+
+        mockServer.reset();
+        String body = new String(Files.readAllBytes((new File("src/test/resources/tadoActiveTimeTable.json")).toPath()));
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/zones/0/schedule/activeTimetable")))
+          .andExpect(method(HttpMethod.GET))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(body)
+        );                                   
+            
+        TadoTimeTable result = tadoInterface.tadoActiveTimeTable(123456, 0);
+        assertNotNull(result);
+        assertEquals(2, result.getId());
+        assertEquals("SEVEN_DAY", result.getType());
+        mockServer.verify();
+    }
+
+    /**
+     * Test of tadoScheduleBlocks method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testTadoScheduleBlocks() throws Exception
+    {
+        System.out.println("tadoScheduleBlocks");
+
+        mockServer.reset();
+        String body = new String(Files.readAllBytes((new File("src/test/resources/tadoScheduleBlocks.json")).toPath()));
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/zones/0/schedule/timetables/2/blocks")))
+          .andExpect(method(HttpMethod.GET))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(body)
+        );                                   
+            
+        List<TadoScheduleBlock> result = tadoInterface.tadoScheduleBlocks(123456, 0, 2);
+        assertNotNull(result);
+        assertEquals(27, result.size());
+        assertEquals("MONDAY", result.get(0).getDayType());
+        assertEquals("07:00", result.get(1).getStart().toString());
+        assertEquals("08:30", result.get(1).getEnd().toString());
+        assertEquals(true, result.get(0).isGeolocationOverride());
+        assertEquals(false, result.get(1).isGeolocationOverride());
+        assertEquals("HEATING", result.get(0).getSetting().getType());
+        assertEquals("ON", result.get(26).getSetting().getPower());
+        assertEquals(17.00, result.get(0).getSetting().getTemperature().getCelsius(), 0.001);
+        assertEquals(62.60, result.get(0).getSetting().getTemperature().getFahrenheit(), 0.001);
         mockServer.verify();
     }
 }

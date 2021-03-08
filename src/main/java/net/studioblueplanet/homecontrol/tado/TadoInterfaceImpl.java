@@ -22,6 +22,7 @@ import net.studioblueplanet.homecontrol.tado.entities.TadoName;
 import net.studioblueplanet.homecontrol.tado.entities.TadoOverlay;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPassword;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence;
+import net.studioblueplanet.homecontrol.tado.entities.TadoScheduleBlock;
 import net.studioblueplanet.homecontrol.tado.entities.TadoSetting;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.entities.TadoTemperature;
@@ -321,7 +322,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
 
         if (account!=null)
         {
-            LOG.info("Requesting Tado ZONES for user {}, home {}, zone {}", account.getUsername(), homeId, zoneId);
+            LOG.info("Requesting Tado Zone State for user {}, home {}, zone {}", account.getUsername(), homeId, zoneId);
             HttpHeaders headers             = new HttpHeaders();
             headers.setBearerAuth(account.getToken().getAccess_token());
             HttpEntity entity               = new HttpEntity(headers);
@@ -587,7 +588,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     }
     
     @Override
-    public List<TadoTimeTable> timeTables(int homeId, int zoneId)
+    public List<TadoTimeTable> tadoTimeTables(int homeId, int zoneId)
     {
         TadoAccount account=accountManager.findAccount(homeId);
 
@@ -597,7 +598,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
             HttpHeaders headers             = new HttpHeaders();
             headers.setBearerAuth(account.getToken().getAccess_token());
             HttpEntity entity               = new HttpEntity(headers);
-            ResponseEntity<TadoTimeTable[]> response = template.exchange("https://my.tado.com/api/v1/home/"+homeId+"/zones/"+zoneId+"/schedule/timetables", 
+            ResponseEntity<TadoTimeTable[]> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/zones/"+zoneId+"/schedule/timetables", 
                                                                        HttpMethod.GET, entity, TadoTimeTable[].class);        
             TadoTimeTable[] timeTables=response.getBody();
             return Arrays.stream(timeTables).collect(Collectors.toList());
@@ -610,7 +611,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
     }
     
     @Override
-    public TadoTimeTable  activeTimeTable(int homeId, int zoneId)
+    public TadoTimeTable  tadoActiveTimeTable(int homeId, int zoneId)
     {
         TadoAccount account=accountManager.findAccount(homeId);
 
@@ -620,7 +621,7 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
             HttpHeaders headers             = new HttpHeaders();
             headers.setBearerAuth(account.getToken().getAccess_token());
             HttpEntity entity               = new HttpEntity(headers);
-            ResponseEntity<TadoTimeTable> response = template.exchange("https://my.tado.com/api/v1/home/"+homeId+"/zones/"+zoneId+"/schedule/activetimetable", 
+            ResponseEntity<TadoTimeTable> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+"/zones/"+zoneId+"/schedule/activeTimetable", 
                                                                        HttpMethod.GET, entity, TadoTimeTable.class);        
             return response.getBody();
         }
@@ -629,5 +630,29 @@ public class TadoInterfaceImpl extends TimerTask implements TadoInterface
             LOG.error("No account found for home {} requested by user {}", homeId, accountManager.loggedInUsername());
             throw new TadoException(TadoException.TadoExceptionType.APPLICATION_ERROR, "No account found for home "+homeId+". Unauthorized access.", 0);            
         }
+    }
+
+    public List<TadoScheduleBlock> tadoScheduleBlocks(int homeId, int zoneId, int timeTableId)
+    {
+        TadoAccount account=accountManager.findAccount(homeId);
+
+        if (account!=null)
+        {
+            LOG.info("Requesting Tado schedule blocks for home {}, zone {}, time table {}. Account {}", homeId, zoneId, timeTableId, account.getUsername());
+            HttpHeaders headers             = new HttpHeaders();
+            headers.setBearerAuth(account.getToken().getAccess_token());
+            HttpEntity entity               = new HttpEntity(headers);
+            ResponseEntity<TadoScheduleBlock[]> response = template.exchange("https://my.tado.com/api/v2/homes/"+homeId+
+                                                                             "/zones/"+zoneId+
+                                                                             "/schedule/timetables/"+timeTableId+"/blocks", 
+                                                                             HttpMethod.GET, entity, TadoScheduleBlock[].class);        
+            TadoScheduleBlock[] blocks=response.getBody();
+            return Arrays.stream(blocks).collect(Collectors.toList());
+        }
+        else
+        {
+            LOG.error("No account found for home {} requested by user {}", homeId, accountManager.loggedInUsername());
+            throw new TadoException(TadoException.TadoExceptionType.APPLICATION_ERROR, "No account found for home "+homeId+". Unauthorized access.", 0);            
+        }          
     }
 }

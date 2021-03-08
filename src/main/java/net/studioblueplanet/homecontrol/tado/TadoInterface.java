@@ -16,6 +16,7 @@ import net.studioblueplanet.homecontrol.tado.entities.TadoName;
 import net.studioblueplanet.homecontrol.tado.entities.TadoOverlay;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPassword;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence.TadoHomePresence;
+import net.studioblueplanet.homecontrol.tado.entities.TadoScheduleBlock;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.entities.TadoTimeTable;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
@@ -169,7 +170,7 @@ public interface TadoInterface
      * @param zoneId Zone ID
      * @return List of available time tables type
      */
-    public List<TadoTimeTable>  timeTables(int homeId, int zoneId);
+    public List<TadoTimeTable>      tadoTimeTables(int homeId, int zoneId);
     
     /**
      * Get the chosen time table type for this zone
@@ -177,6 +178,13 @@ public interface TadoInterface
      * @param zoneId Zone ID
      * @return The chosen time table type
      */
-    public TadoTimeTable        activeTimeTable(int homeId, int zoneId);
-
+    public TadoTimeTable            tadoActiveTimeTable(int homeId, int zoneId);
+    
+    /**
+     * Request the list of blocks making up the current schedule
+     * @param homeId Home ID
+     * @param zoneId Zone ID
+     * @return List of blocks
+     */
+    public List<TadoScheduleBlock>  tadoScheduleBlocks(int homeId, int zoneId, int timeTableId);  
 }

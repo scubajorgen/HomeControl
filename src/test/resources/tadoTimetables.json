@@ -1,0 +1,14 @@
+[
+  {
+    "id": 0,
+    "type": "ONE_DAY"
+  },
+  {
+    "id": 1,
+    "type": "THREE_DAY"
+  },
+  {
+    "id": 2,
+    "type": "SEVEN_DAY"
+  }
+]
