@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 
 import net.studioblueplanet.homecontrol.Application;
 import net.studioblueplanet.homecontrol.tado.entities.TadoDevice;
@@ -22,6 +23,7 @@ import net.studioblueplanet.homecontrol.tado.entities.TadoPassword;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence;
 import net.studioblueplanet.homecontrol.tado.entities.TadoScheduleBlock;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
+import net.studioblueplanet.homecontrol.tado.entities.TadoTemperature;
 import net.studioblueplanet.homecontrol.tado.entities.TadoTimeTable;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
@@ -45,10 +47,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -66,6 +69,7 @@ import org.springframework.security.core.userdetails.User;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class)
+@DirtiesContext(classMode=ClassMode.BEFORE_CLASS) // don't reuse context from other tests
 @ContextConfiguration
 /**
  *
@@ -482,6 +486,37 @@ public class TadoIntegrationTest
     }  
 
     /**
+     * Test of tadoTimeTables method, of class TadoInterfaceImpl.
+     */
+    @Test
+    @WithTadoUser
+    public void test14TadoActiveTimeTable() throws Exception
+    {
+        TadoToken localToken;
+
+        assumeTrue("Integration test disabled, test not executed", integrationTestEnabled);
+        LOG.info("### tadoActiveTimeTable, tadoSetActiveTimeTable");
+        
+        TadoTimeTable result=tadoInterface.tadoActiveTimeTable(homeId, heatingZoneId);
+        assertNotNull(result);
+        LOG.info("# Active time table for home {} zone {}: {} - {}", homeId, heatingZoneId, result.getId(), result.getType());
+
+        int backupId=result.getId();
+        int newTimeTableId=(backupId+1)%3;
+        
+        result=tadoInterface.tadoSetActiveTimeTable(homeId, heatingZoneId, new TadoTimeTable(newTimeTableId));
+        assertNotNull(result);
+        assertEquals(newTimeTableId, result.getId());
+        LOG.info("# Active time table set to {} - {}", result.getId(), result.getType());
+
+        result=tadoInterface.tadoSetActiveTimeTable(homeId, heatingZoneId, new TadoTimeTable(backupId));
+        assertNotNull(result);
+        assertEquals(backupId, result.getId());
+        LOG.info("# Active time table reset to {} - {}", result.getId(), result.getType());
+    }   
+    
+    
+    /**
      * Test of tadoScheduleBlocks method, of class TadoInterfaceImpl.
      */
     @Test
@@ -500,11 +535,73 @@ public class TadoIntegrationTest
         List<TadoScheduleBlock> result=tadoInterface.tadoScheduleBlocks(homeId, heatingZoneId, current.getId());
         assertNotNull(result);
         LOG.info("# Schedule available for home {} zone {} for {}: ", homeId, heatingZoneId, current.getType());
-        result.stream().forEach(t -> LOG.info("# {} {} - {}: {} at {} ", 
+        result.stream().forEach(t -> LOG.info("# {} {} - {}: {} at {} C", 
                                                 t.getDayType(),
                                                 t.getStart().toString(),
                                                 t.getEnd().toString(),
                                                 t.getSetting().getPower(),
-                                                t.getSetting().getTemperature().getCelsius()));
+                                                t.getSetting().getTemperature()!=null?t.getSetting().getTemperature().getCelsius():0));
+    }
+
+    /**
+     * Test of tadoSetScheduleBlocks method, of class TadoInterfaceImpl.
+     */
+    @Test
+    @WithTadoUser
+    public void test15TadoSetScheduleBlocks() throws Exception
+    {
+        TadoToken localToken;
+        
+        assumeTrue("Integration test disabled, test not executed", integrationTestEnabled);
+        LOG.info("### tadoSetScheduleBlocks, tadoScheduleBlocks");
+        
+        TadoTimeTable activeTimeTable=tadoInterface.tadoActiveTimeTable(homeId, heatingZoneId);
+        assertNotNull(activeTimeTable);
+        int activeTimeTableId=activeTimeTable.getId();
+        LOG.info("# Current time table for home {}, zone {}: {}", homeId, heatingZoneId, activeTimeTable.getType());
+
+        List<TadoScheduleBlock> schedule=tadoInterface.tadoScheduleBlocks(homeId, heatingZoneId, activeTimeTableId);
+        assertNotNull(schedule);
+        LOG.info("# Schedule available for home {} zone {} for schedule {}: {}-{}", homeId, heatingZoneId, activeTimeTableId, activeTimeTable.getType());
+
+        String firstDay=schedule.get(0).getDayType();
+        
+        List<TadoScheduleBlock> blocks=schedule.stream().filter(f -> f.getDayType().equals(firstDay)).collect(Collectors.toList());
+        
+        String backupPower=blocks.get(0).getSetting().getPower();
+        TadoTemperature backupTemperature=null;
+        
+        if (backupPower.equals("ON"))
+        {
+            blocks.get(0).getSetting().setPower("OFF");
+            backupTemperature=blocks.get(0).getSetting().getTemperature();
+            
+        }
+        else
+        {
+            blocks.get(0).getSetting().setPower("ON");
+            blocks.get(0).getSetting().setTemperature(new TadoTemperature(20.1));
+        }
+
+        // Write modified schedule
+        List<TadoScheduleBlock> readback=tadoInterface.tadoSetScheduleBlocks(homeId, heatingZoneId, activeTimeTableId, blocks);
+        assertNotNull(readback);
+        if (backupPower.equals("ON"))
+        {
+            assertEquals("OFF", readback.get(0).getSetting().getPower());
+            assertNull(readback.get(0).getSetting().getTemperature());
+            blocks.get(0).getSetting().setPower("ON");
+            blocks.get(0).getSetting().setTemperature(backupTemperature);
+            
+        }
+        else
+        {
+            assertEquals("ON", readback.get(0).getSetting().getPower());
+            assertEquals(20.1, readback.get(0).getSetting().getTemperature().getCelsius(), 0.001);
+            blocks.get(0).getSetting().setPower("OFF");
+        }
+        // Write original schedule
+        readback=tadoInterface.tadoSetScheduleBlocks(homeId, heatingZoneId, activeTimeTableId, blocks);
+        assertNotNull(readback);
     }
 }

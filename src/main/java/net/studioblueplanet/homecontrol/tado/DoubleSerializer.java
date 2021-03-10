@@ -24,7 +24,8 @@ public class DoubleSerializer extends StdSerializer<Double>
         this(null);
     }
   
-    public DoubleSerializer(Class<Double> t) {
+    public DoubleSerializer(Class<Double> t)
+    {
         super(t);
     }
         

@@ -5,19 +5,23 @@
  */
 package net.studioblueplanet.homecontrol.tado.entities;
 
-import java.util.Date;
 import java.time.LocalTime;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import net.studioblueplanet.homecontrol.tado.LocalTimeSerializer;
 
 /**
  *
  * @author jorgen
  */
+
 public class TadoScheduleBlock
 {
     /** Day indication, like MONDAY_TO_SUNDAY/MONDAY_TO_FRIDAY, SATURDAY, SUNDAY/MONDAY, TUESDAY, WEDNESSDAY, ... */
     private String      dayType;
     /** Start time of block, like "00:00", "08:30" or "23:00" */
+    @JsonSerialize(using = LocalTimeSerializer.class)
     private LocalTime   start;
+    @JsonSerialize(using = LocalTimeSerializer.class)
     private LocalTime   end;
     private boolean     geolocationOverride;
     private TadoSetting setting;

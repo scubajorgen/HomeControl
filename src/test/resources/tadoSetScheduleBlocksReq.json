@@ -1,0 +1,30 @@
+[
+  {
+    "dayType": "MONDAY",
+    "start": "00:00",
+    "end": "07:00",
+    "geolocationOverride": false,
+    "setting": {
+      "type": "HEATING",
+      "power": "ON",
+      "temperature": {
+        "celsius": 17,
+        "fahrenheit": 62.6
+      }
+    }
+  },
+  {
+    "dayType": "MONDAY",
+    "start": "07:00",
+    "end": "00:00",
+    "geolocationOverride": false,
+    "setting": {
+      "type": "HEATING",
+      "power": "ON",
+      "temperature": {
+        "celsius": 19.5,
+        "fahrenheit": 67.1
+      }
+    }
+  }
+]

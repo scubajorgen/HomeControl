@@ -181,10 +181,33 @@ public interface TadoInterface
     public TadoTimeTable            tadoActiveTimeTable(int homeId, int zoneId);
     
     /**
-     * Request the list of blocks making up the current schedule
+     * Set the active time table type for this zone
      * @param homeId Home ID
      * @param zoneId Zone ID
+     * @param timeTable The new time table. Only the ID must be set, the type must be null
+     * @return The chosen time table type
+     */
+    public TadoTimeTable            tadoSetActiveTimeTable(int homeId, int zoneId, TadoTimeTable timeTable);
+    
+    
+    
+    /**
+     * Sets the a list of blocks. It must be the list of all blocks making up one 
+     * the schedule of one day.
+     * @param homeId Home ID
+     * @param zoneId Zone ID
+     * @param timeTableId Id of the time table
      * @return List of blocks
      */
     public List<TadoScheduleBlock>  tadoScheduleBlocks(int homeId, int zoneId, int timeTableId);  
+
+    /**
+     * Request the list of blocks making up the current schedule
+     * @param homeId Home ID
+     * @param zoneId Zone ID
+     * @param blocks List of all blocks of one day
+     * @return List of blocks
+     */
+    public List<TadoScheduleBlock>  tadoSetScheduleBlocks(int homeId, int zoneId, int timeTableId, List<TadoScheduleBlock> blocks);  
+
 }

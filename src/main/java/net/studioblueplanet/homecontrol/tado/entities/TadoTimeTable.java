@@ -5,12 +5,15 @@
  */
 package net.studioblueplanet.homecontrol.tado.entities;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
  * This class represents a time table type. Apparently following types are
  * available 0 - ONE_DAY (every weekday the same), 
  * 1 - THREE_DAY (saterday, sunday monday-friday), 2 - SEVEN_DAY (each day)
  * @author jorgen
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TadoTimeTable
 {
     /** ID of the time table type */
@@ -18,6 +21,23 @@ public class TadoTimeTable
     /** Human readable description */
     private String type;
 
+    /**
+     * Create time table
+     * @param id The ID of the time table
+     */
+    public TadoTimeTable(int id)
+    {
+        this.id=id;
+        this.type=null;
+    }
+
+    /**
+     * Default constructor
+     */
+    public TadoTimeTable()
+    {
+    }
+    
     public int getId()
     {
         return id;

@@ -21,6 +21,16 @@ public class TadoTemperature
     @JsonSerialize(using = DoubleSerializer.class)
     private double fahrenheit;
 
+    public TadoTemperature(double tempInCelsius)
+    {
+        this.celsius=tempInCelsius;
+        this.fahrenheit=(tempInCelsius * 9.0/5.0) + 32.0;
+    }
+    
+    public TadoTemperature()
+    {
+    }
+    
     public double getCelsius()
     {
         return celsius;

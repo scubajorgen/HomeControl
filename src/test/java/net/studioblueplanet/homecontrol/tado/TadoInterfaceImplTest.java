@@ -11,6 +11,7 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.LocalTime;
 import net.studioblueplanet.homecontrol.tado.entities.TadoAccount;
 import net.studioblueplanet.homecontrol.tado.entities.TadoDevice;
 import net.studioblueplanet.homecontrol.tado.entities.TadoEmail;
@@ -22,7 +23,9 @@ import net.studioblueplanet.homecontrol.tado.entities.TadoOverlay;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPassword;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence.TadoHomePresence;
 import net.studioblueplanet.homecontrol.tado.entities.TadoScheduleBlock;
+import net.studioblueplanet.homecontrol.tado.entities.TadoSetting;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
+import net.studioblueplanet.homecontrol.tado.entities.TadoTemperature;
 import net.studioblueplanet.homecontrol.tado.entities.TadoTimeTable;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
@@ -1124,6 +1127,31 @@ public class TadoInterfaceImplTest
     }
 
     /**
+     * Test of tadoTimeTables method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testTadoSetActiveTimeTable() throws Exception
+    {
+        System.out.println("tadoSetActiveTimeTable");
+
+        mockServer.reset();
+        String body = new String(Files.readAllBytes((new File("src/test/resources/tadoSetActiveTimeTable.json")).toPath()));
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/zones/0/schedule/activeTimetable")))
+          .andExpect(method(HttpMethod.PUT))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(body)
+        );                                   
+            
+        TadoTimeTable result = tadoInterface.tadoSetActiveTimeTable(123456, 0, new TadoTimeTable(2));
+        assertNotNull(result);
+        assertEquals(2, result.getId());
+        assertEquals("SEVEN_DAY", result.getType());
+        mockServer.verify();
+    }
+
+    /**
      * Test of tadoScheduleBlocks method, of class TadoInterfaceImpl.
      */
     @Test
@@ -1153,6 +1181,52 @@ public class TadoInterfaceImplTest
         assertEquals("ON", result.get(26).getSetting().getPower());
         assertEquals(17.00, result.get(0).getSetting().getTemperature().getCelsius(), 0.001);
         assertEquals(62.60, result.get(0).getSetting().getTemperature().getFahrenheit(), 0.001);
+        mockServer.verify();
+    }
+
+    /**
+     * Test of tadoScheduleBlocks method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testTadoSetScheduleBlocks() throws Exception
+    {
+        System.out.println("tadoSetScheduleBlocks");
+
+        mockServer.reset();
+        String responseBody = new String(Files.readAllBytes((new File("src/test/resources/tadoSetScheduleBlocksResp.json")).toPath()));
+        String requestBody = new String(Files.readAllBytes((new File("src/test/resources/tadoSetScheduleBlocksReq.json")).toPath()));
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/zones/0/schedule/timetables/2/blocks/MONDAY")))
+          .andExpect(method(HttpMethod.PUT))
+          .andExpect(content().string(requestBody.replaceAll("\\s", "")))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(responseBody)
+        );                                   
+            
+        List<TadoScheduleBlock> blocks = new ArrayList<>();
+        TadoScheduleBlock block=new TadoScheduleBlock();
+        block.setStart(LocalTime.of(00, 00));
+        block.setEnd(LocalTime.of(07, 00));
+        block.setDayType("MONDAY");
+        TadoSetting setting=new TadoSetting();
+        setting.setPower("ON");
+        setting.setType("HEATING");
+        setting.setTemperature(new TadoTemperature(17));
+        block.setSetting(setting);
+        blocks.add(block);
+        block=new TadoScheduleBlock();
+        block.setStart(LocalTime.of(07, 00));
+        block.setEnd(LocalTime.of(00, 00));
+        block.setDayType("MONDAY");
+        setting=new TadoSetting();
+        setting.setPower("ON");
+        setting.setType("HEATING");
+        setting.setTemperature(new TadoTemperature(19.50));
+        block.setSetting(setting);
+        blocks.add(block);        
+        
+        List<TadoScheduleBlock> result=tadoInterface.tadoSetScheduleBlocks(123456, 0, 2, blocks);
         mockServer.verify();
     }
 }
