@@ -7,6 +7,7 @@ package net.studioblueplanet.homecontrol.tado;
 
 import java.util.List;
 
+import net.studioblueplanet.homecontrol.tado.entities.TadoAirComfort;
 import net.studioblueplanet.homecontrol.tado.entities.TadoDevice;
 import net.studioblueplanet.homecontrol.tado.entities.TadoEmail;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
@@ -20,6 +21,7 @@ import net.studioblueplanet.homecontrol.tado.entities.TadoScheduleBlock;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.entities.TadoTimeTable;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
+import net.studioblueplanet.homecontrol.tado.entities.TadoWeather;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZoneState;
 
@@ -209,5 +211,19 @@ public interface TadoInterface
      * @return List of blocks
      */
     public List<TadoScheduleBlock>  tadoSetScheduleBlocks(int homeId, int zoneId, int timeTableId, List<TadoScheduleBlock> blocks);  
+    
+    /**
+     * Retrieve information about the air comfort
+     * @param homeId Home ID
+     * @return The info about the comfort levels
+     */
+    public TadoAirComfort tadoAirComfort(int homeId);
+
+    /**
+     * Retrieve information about the weather
+     * @param homeId Home ID
+     * @return The info about the weather
+     */
+    public TadoWeather tadoWeather(int homeId);
 
 }

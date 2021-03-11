@@ -20,6 +20,7 @@ public class TadoDataPoint
     private double                      percentage;
     private double                      celsius;
     private double                      fahrenheit;
+    private String                      value;
     private TadoTemperaturePrecision    precision;
 
     public String getType()
@@ -50,6 +51,16 @@ public class TadoDataPoint
     public void setPercentage(double percentage)
     {
         this.percentage = percentage;
+    }
+
+    public String getValue()
+    {
+        return value;
+    }
+
+    public void setValue(String value)
+    {
+        this.value = value;
     }
 
     public double getCelsius()

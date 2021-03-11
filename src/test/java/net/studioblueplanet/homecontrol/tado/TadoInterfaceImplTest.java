@@ -12,6 +12,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.LocalTime;
+import net.studioblueplanet.homecontrol.tado.entities.TadoAirComfort;
 import net.studioblueplanet.homecontrol.tado.entities.TadoAccount;
 import net.studioblueplanet.homecontrol.tado.entities.TadoDevice;
 import net.studioblueplanet.homecontrol.tado.entities.TadoEmail;
@@ -28,6 +29,7 @@ import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.entities.TadoTemperature;
 import net.studioblueplanet.homecontrol.tado.entities.TadoTimeTable;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
+import net.studioblueplanet.homecontrol.tado.entities.TadoWeather;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZoneState;
 import org.junit.After;
@@ -1227,6 +1229,77 @@ public class TadoInterfaceImplTest
         blocks.add(block);        
         
         List<TadoScheduleBlock> result=tadoInterface.tadoSetScheduleBlocks(123456, 0, 2, blocks);
+        mockServer.verify();
+    }
+
+    /**
+     * Test of tadoAirComfort method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testTadoAirComfort() throws Exception
+    {
+        System.out.println("tadoAirComfort");
+
+        mockServer.reset();
+        String body = new String(Files.readAllBytes((new File("src/test/resources/tadoAirComfort.json")).toPath()));
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/airComfort")))
+          .andExpect(method(HttpMethod.GET))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(body)
+        );                                   
+            
+        TadoAirComfort result = tadoInterface.tadoAirComfort(123456);
+        assertNotNull(result);
+        assertEquals("FAIR", result.getFreshness().getValue());
+        assertEquals("2021-03-09 06:56:03", dateFormat.format(result.getFreshness().getLastOpenWindow()));
+        assertEquals(3, result.getComfort().size());
+        assertEquals(3, result.getComfort().get(1).getRoomId());
+        assertEquals("COLD", result.getComfort().get(1).getTemperatureLevel());
+        assertEquals("HUMID", result.getComfort().get(2).getHumidityLevel());
+        assertEquals(1.00, result.getComfort().get(2).getCoordinate().getRadial(), 0.001);
+        assertEquals(295, result.getComfort().get(2).getCoordinate().getAngular());
+        
+        mockServer.verify();
+    }
+
+    /**
+     * Test of tadoWeather method, of class TadoInterfaceImpl.
+     */
+    @Test
+    public void testTadoWeather() throws Exception
+    {
+        System.out.println("tadoWeather");
+
+        mockServer.reset();
+        String body = new String(Files.readAllBytes((new File("src/test/resources/tadoWeather.json")).toPath()));
+        mockServer.expect(ExpectedCount.once(), 
+          requestTo(new URI("https://my.tado.com/api/v2/homes/123456/weather")))
+          .andExpect(method(HttpMethod.GET))
+          .andRespond(withStatus(HttpStatus.OK)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(body)
+        );                                   
+            
+        TadoWeather result = tadoInterface.tadoWeather(123456);
+        assertNotNull(result);
+        assertEquals("PERCENTAGE", result.getSolarIntensity().getType());
+        assertEquals(21.10, result.getSolarIntensity().getPercentage(), 0.001);
+        assertEquals("2021-03-11 16:10:35", dateFormat.format(result.getSolarIntensity().getTimestamp()));
+
+        assertEquals("TEMPERATURE", result.getOutsideTemperature().getType());
+        assertEquals(9.57, result.getOutsideTemperature().getCelsius(), 0.001);
+        assertEquals(49.23, result.getOutsideTemperature().getFahrenheit(), 0.001);
+        assertEquals(0.01, result.getOutsideTemperature().getPrecision().getCelsius(), 0.001);
+        assertEquals(0.01, result.getOutsideTemperature().getPrecision().getFahrenheit(), 0.001);
+        assertEquals("2021-03-11 16:10:35", dateFormat.format(result.getOutsideTemperature().getTimestamp()));
+
+        assertEquals("WEATHER_STATE", result.getWeatherState().getType());
+        assertEquals("CLOUDY_PARTLY", result.getWeatherState().getValue());
+        assertEquals("2021-03-11 16:10:35", dateFormat.format(result.getWeatherState().getTimestamp()));
+
+        
         mockServer.verify();
     }
 }

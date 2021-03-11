@@ -1,0 +1,35 @@
+{
+  "freshness": {
+    "value": "FAIR",
+    "lastOpenWindow": "2021-03-09T06:56:03Z"
+  },
+  "comfort": [
+    {
+      "roomId": 1,
+      "temperatureLevel": "COLD",
+      "humidityLevel": "COMFY",
+      "coordinate": {
+        "radial": 0.92,
+        "angular": 271
+      }
+    },
+    {
+      "roomId": 3,
+      "temperatureLevel": "COLD",
+      "humidityLevel": "COMFY",
+      "coordinate": {
+        "radial": 0.51,
+        "angular": 241
+      }
+    },
+    {
+      "roomId": 4,
+      "temperatureLevel": "COLD",
+      "humidityLevel": "HUMID",
+      "coordinate": {
+        "radial": 1.00,
+        "angular": 295
+      }
+    }
+  ]
+}

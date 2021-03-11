@@ -13,6 +13,7 @@ import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 import net.studioblueplanet.homecontrol.Application;
+import net.studioblueplanet.homecontrol.tado.entities.TadoAirComfort;
 import net.studioblueplanet.homecontrol.tado.entities.TadoDevice;
 import net.studioblueplanet.homecontrol.tado.entities.TadoEmail;
 import net.studioblueplanet.homecontrol.tado.entities.TadoMe;
@@ -26,6 +27,7 @@ import net.studioblueplanet.homecontrol.tado.entities.TadoState;
 import net.studioblueplanet.homecontrol.tado.entities.TadoTemperature;
 import net.studioblueplanet.homecontrol.tado.entities.TadoTimeTable;
 import net.studioblueplanet.homecontrol.tado.entities.TadoToken;
+import net.studioblueplanet.homecontrol.tado.entities.TadoWeather;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZoneState;
 
@@ -548,7 +550,7 @@ public class TadoIntegrationTest
      */
     @Test
     @WithTadoUser
-    public void test15TadoSetScheduleBlocks() throws Exception
+    public void test16TadoSetScheduleBlocks() throws Exception
     {
         TadoToken localToken;
         
@@ -603,5 +605,45 @@ public class TadoIntegrationTest
         // Write original schedule
         readback=tadoInterface.tadoSetScheduleBlocks(homeId, heatingZoneId, activeTimeTableId, blocks);
         assertNotNull(readback);
+    }
+
+    /**
+     * Test of tadoAirComfort method, of class TadoInterfaceImpl.
+     */
+    @Test
+    @WithTadoUser
+    public void test17TadoAirComfort() throws Exception
+    {
+        TadoToken localToken;
+        
+        assumeTrue("Integration test disabled, test not executed", integrationTestEnabled);
+        LOG.info("### tadoAirComfort");
+        
+        TadoAirComfort comfort=tadoInterface.tadoAirComfort(homeId);
+        assertNotNull(comfort);
+        LOG.info("# Freshness: {}, last open window {}", comfort.getFreshness().getValue(), 
+                                                         dateFormat.format(comfort.getFreshness().getLastOpenWindow()));
+        comfort.getComfort().stream().forEach(c -> LOG.info("# Zone {}: temperature {}, humidity {}",
+                                                            c.getRoomId(), c.getTemperatureLevel(), c.getHumidityLevel()));                
+
+    }
+
+    /**
+     * Test of tadoWeather method, of class TadoInterfaceImpl.
+     */
+    @Test
+    @WithTadoUser
+    public void test18TadoWeather() throws Exception
+    {
+        TadoToken localToken;
+        
+        assumeTrue("Integration test disabled, test not executed", integrationTestEnabled);
+        LOG.info("### tadoWeather");
+        
+        TadoWeather weather=tadoInterface.tadoWeather(homeId);
+        assertNotNull(weather);
+        LOG.info("# Sun Intensity: {}%", weather.getSolarIntensity().getPercentage());
+        LOG.info("# Outside temperature {} C", weather.getOutsideTemperature().getCelsius());
+        LOG.info("# The weather is {}", weather.getWeatherState().getValue());
     }
 }
