@@ -21,6 +21,7 @@ import net.studioblueplanet.homecontrol.tado.entities.TadoDevice;
 import net.studioblueplanet.homecontrol.tado.entities.TadoHome;
 import net.studioblueplanet.homecontrol.tado.entities.TadoPresence.TadoHomePresence;
 import net.studioblueplanet.homecontrol.tado.entities.TadoState;
+import net.studioblueplanet.homecontrol.tado.entities.TadoWeather;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZone;
 import net.studioblueplanet.homecontrol.tado.entities.TadoZoneState;
 import net.studioblueplanet.homecontrol.tado.TadoInterface;
@@ -74,6 +75,12 @@ public class HomeServiceImpl implements HomeService
                 .byDefault()
                 .register();
 
+        mapperFactory.classMap(TadoWeather.class, Home.class)
+                .field("solarIntensity.percentage" , "solarIntensity")
+                .field("outsideTemperature.celsius", "outsideTemperature")
+                .field("weatherState.value"        , "weatherState")
+                .register();
+
         mapperFactory.classMap(TadoZone.class, Zone.class)
                 .byDefault()
                 .register();
@@ -99,17 +106,20 @@ public class HomeServiceImpl implements HomeService
     @Override
     public Home getHome(int homeId)
     {
-        TadoHome  home;
-        TadoState state;
+        TadoHome    home;
+        TadoState   state;
+        TadoWeather weather;
         Home      theHome=null;
         
         try
         {
             state   =tado.tadoPresence(homeId);    
             home    =tado.tadoHome(homeId);
+            weather =tado.tadoWeather(homeId);
             MapperFacade mapper = mapperFactory.getMapperFacade();
             theHome=mapper.map(home, Home.class);
             mapper.map(state, theHome);
+            mapper.map(weather, theHome);
         }
         catch (TadoException e)
         {

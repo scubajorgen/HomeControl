@@ -11,20 +11,24 @@ package net.studioblueplanet.homecontrol.service.entities;
  */
 public class Home
 {
-    private int         id;
-    private String      name;
-    private String      dateTimeZone;
-    private String      temperatureUnit;
-    private int         awayRadiusInMeters;
-    private double      latitude;
-    private double      longitude;
-    private String      presence;
-    private String      contact;
-    private String      addressLine1;
-    private String      addressLine2;
-    private String      zipCode;
-    private String      city;
-    private String      country;
+
+    private int     id;
+    private String  name;
+    private String  dateTimeZone;
+    private String  temperatureUnit;
+    private int     awayRadiusInMeters;
+    private double  latitude;
+    private double  longitude;
+    private String  presence;
+    private String  contact;
+    private String  addressLine1;
+    private String  addressLine2;
+    private String  zipCode;
+    private String  city;
+    private String  country;
+    private double  solarIntensity;
+    private double  outsideTemperature;
+    private String  weatherState;
 
     public int getId()
     {
@@ -165,5 +169,34 @@ public class Home
     {
         this.country = country;
     }
-   
+
+    public double getSolarIntensity()
+    {
+        return solarIntensity;
+    }
+
+    public void setSolarIntensity(double solarIntensity)
+    {
+        this.solarIntensity = solarIntensity;
+    }
+
+    public double getOutsideTemperature()
+    {
+        return outsideTemperature;
+    }
+
+    public void setOutsideTemperature(double outsideTemperature)
+    {
+        this.outsideTemperature = outsideTemperature;
+    }
+
+    public String getWeatherState()
+    {
+        return weatherState;
+    }
+
+    public void setWeatherState(String weatherState)
+    {
+        this.weatherState = weatherState;
+    }
 }
